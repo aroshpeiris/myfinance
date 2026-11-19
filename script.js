@@ -125,7 +125,9 @@ function removeDemoData(root) {
 }
 
 function saveRootState() {
+    rootState.updatedAt = Date.now();
     localStorage.setItem(STORAGE_KEY, JSON.stringify(rootState));
+    if (typeof scheduleSync === 'function') scheduleSync();
 }
 
 function getActiveProfile() {
@@ -956,7 +958,6 @@ function handleSaveTransaction(e) {
         }
 
         saveRootState();
-        syncPending(false);
         closeAddDrawer();
         renderAll();
         showToast(fee > 0 ? `Transfer saved + ${formatMoney(fee, 0)} Bank Fee logged!` : 'Transfer completed!');
@@ -975,7 +976,6 @@ function handleSaveTransaction(e) {
     });
 
     saveRootState();
-    syncPending(false);
     closeAddDrawer();
     renderAll();
     showToast(`${drawerType} saved!`);
@@ -989,7 +989,7 @@ function confirmDeleteTx(txId) {
             style: 'bg-dangerRed text-white',
             onClick: () => {
                 const p = getActiveProfile();
-                syncDelete([txId]);
+                rootState.deletedTxIds = [...(rootState.deletedTxIds || []), txId];
                 p.transactions = p.transactions.filter(t => t.id !== txId);
                 saveRootState();
                 closeModal();
@@ -1434,6 +1434,7 @@ function confirmResetCurrentProfile() {
             label: 'Reset Profile',
             style: 'bg-dangerRed text-white',
             onClick: () => {
+                rootState.deletedTxIds = [...(rootState.deletedTxIds || []), ...p.transactions.map(t => t.id)];
                 p.transactions = [];
                 p.accounts.forEach(a => a.openingBalance = 0);
                 saveRootState();
@@ -1505,22 +1506,23 @@ function showToast(msg) {
 }
 
 /* =====================================================================
- * GOOGLE SHEET AUTO-SYNC (Apps Script Web App)
- * Sends each transaction once. Already-sent IDs are remembered locally.
+ * GOOGLE SHEET TWO-WAY SYNC (Apps Script Web App)
+ * Every device pulls the latest data from the Sheet, merges it with its own
+ * data, then pushes the merged result back. All devices end up identical.
+ *  - Transactions are merged by ID (nothing is lost).
+ *  - Deleted transactions are remembered (tombstones) so they stay deleted.
+ *  - Accounts / categories / targets: the most recently edited device wins.
  * ===================================================================== */
 const SYNC_URL_KEY = 'myfinance_sync_url';
-const SYNCED_IDS_KEY = 'myfinance_synced_ids';
-let syncBusy = false;
+const SYNC_LINKED_KEY = 'myfinance_sync_linked';
+let syncBusy = false, syncQueued = false, syncTimer = null;
 
 function getSyncUrl() { return localStorage.getItem(SYNC_URL_KEY) || ''; }
-function getSyncedIds() {
-    try { return new Set(JSON.parse(localStorage.getItem(SYNCED_IDS_KEY) || '[]')); }
-    catch (e) { return new Set(); }
-}
 function setSyncStatus(msg) {
     const el = document.getElementById('sync-status');
     if (el) el.textContent = msg;
 }
+function stateSig(st) { const c = { ...st }; delete c.activeProfileId; return JSON.stringify(c); }
 
 function saveSyncUrl() {
     const val = document.getElementById('sync-url-input').value.trim();
@@ -1528,72 +1530,128 @@ function saveSyncUrl() {
         showToast('URL එක https://script.google.com/.../exec ආකාරයෙන් විය යුතුයි.');
         return;
     }
+    if (val !== getSyncUrl()) localStorage.removeItem(SYNC_LINKED_KEY);
     if (val) localStorage.setItem(SYNC_URL_KEY, val); else localStorage.removeItem(SYNC_URL_KEY);
-    setSyncStatus(val ? 'URL saved. "Sync Now" ඔබා පරණ ගනුදෙනු යවන්න.' : 'Sync disabled.');
     showToast(val ? 'Sheet URL saved!' : 'Sync URL removed.');
+    setSyncStatus(val ? 'Saved. Syncing...' : 'Sync disabled.');
+    if (val) syncNow(true);
 }
 
-async function syncPending(manual) {
-    const url = getSyncUrl();
-    if (!url) {
-        if (manual) showToast('මුලින් Sheet URL එක Save කරන්න.');
-        return;
+function scheduleSync() {
+    if (!getSyncUrl()) return;
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(() => syncNow(false), 1500);
+}
+
+function buildSheetRows(st) {
+    const rows = [];
+    st.profiles.forEach(p => {
+        p.transactions.forEach(t => {
+            const acc = (p.accounts.find(a => a.id === t.accountId) || {}).name || '';
+            const cat = t.type.startsWith('Transfer') ? 'Transfer' : ((p.categories.find(c => c.id === t.categoryId) || {}).name || '');
+            rows.push([t.id, t.date, acc, t.type, cat, t.note || '', t.amount, p.name]);
+        });
+    });
+    rows.sort((x, y) => String(y[1]).localeCompare(String(x[1])));
+    return rows;
+}
+
+function mergeStates(local, remote) {
+    const localNewer = (local.updatedAt || 0) >= (remote.updatedAt || 0);
+    const base = JSON.parse(JSON.stringify(localNewer ? local : remote));
+    const other = localNewer ? remote : local;
+    const tomb = new Set([...(local.deletedTxIds || []), ...(remote.deletedTxIds || [])]);
+    base.deletedTxIds = [...tomb];
+    base.activeProfileId = local.activeProfileId;
+    base.profiles.forEach(p => {
+        const op = other.profiles.find(x => x.id === p.id);
+        const map = new Map();
+        (op ? op.transactions : []).forEach(t => map.set(t.id, t));
+        p.transactions.forEach(t => map.set(t.id, t));
+        const accIds = new Set(p.accounts.map(a => a.id));
+        p.transactions = [...map.values()]
+            .filter(t => !tomb.has(t.id) && accIds.has(t.accountId))
+            .sort((x, y) => String(x.id).localeCompare(String(y.id)));
+    });
+    if (!base.profiles.some(p => p.id === base.activeProfileId)) base.activeProfileId = base.profiles[0].id;
+    base.updatedAt = Math.max(local.updatedAt || 0, remote.updatedAt || 0);
+    return base;
+}
+
+async function pushRemote(url, st) {
+    const body = JSON.stringify({ action: 'save', state: JSON.stringify(st), rows: buildSheetRows(st) });
+    const opts = { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body };
+    try {
+        const res = await fetch(url, opts);
+        const j = await res.json();
+        return j && j.status === 'success';
+    } catch (e) {
+        // Response unreadable (CORS): resend blind; the server overwrites, so this is safe.
+        await fetch(url, { ...opts, mode: 'no-cors' });
+        return true;
     }
-    if (syncBusy) return;
+}
+
+async function syncNow(manual) {
+    const url = getSyncUrl();
+    if (!url) { if (manual) showToast('මුලින් Sheet URL එක Save කරන්න.'); return; }
+    if (syncBusy) { syncQueued = true; return; }
     if (!navigator.onLine) {
-        setSyncStatus('Offline: Internet ලැබුණු විට නැවත Sync වේ.');
+        setSyncStatus('Offline: Internet ලැබුණු විට Sync වේ.');
         if (manual) showToast('Offline. පසුව උත්සාහ කරන්න.');
         return;
     }
-    const profile = getActiveProfile();
-    const done = getSyncedIds();
-    const pending = profile.transactions.filter(t => !done.has(t.id));
-    if (pending.length === 0) {
-        setSyncStatus('සියල්ල Sync වී ඇත ✔');
-        if (manual) showToast('Already up to date.');
-        return;
-    }
-    const rows = pending.map(t => ({
-        id: t.id,
-        date: t.date,
-        account: getAccountNameById(profile, t.accountId),
-        type: t.type,
-        category: t.type.startsWith('Transfer') ? 'Transfer' : getCategoryById(profile, t.categoryId).name,
-        note: t.note || '',
-        amount: t.amount
-    }));
     syncBusy = true;
-    setSyncStatus(`Syncing ${rows.length}...`);
+    setSyncStatus('Syncing...');
     try {
-        // text/plain + no-cors avoids the CORS preflight Apps Script cannot answer.
-        await fetch(url, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(rows) });
-        pending.forEach(t => done.add(t.id));
-        localStorage.setItem(SYNCED_IDS_KEY, JSON.stringify([...done]));
-        setSyncStatus(`Sent ${rows.length} • ${new Date().toLocaleTimeString()}`);
-        if (manual) showToast(`${rows.length} ගනුදෙනු Sheet එකට යැවුවා.`);
+        const res = await fetch(url + (url.includes('?') ? '&' : '?') + 'action=pull&t=' + Date.now());
+        const resp = await res.json();
+        if (!resp || resp.status !== 'success') throw new Error('Bad response');
+        const remote = resp.state ? JSON.parse(resp.state) : null;
+        const linked = localStorage.getItem(SYNC_LINKED_KEY) === '1';
+        const localHasData = rootState.profiles.some(p => p.transactions.length > 0);
+
+        let result;
+        if (!remote) {
+            result = rootState;
+        } else if (!linked && !localHasData) {
+            result = remote;                                   // fresh device: adopt the Sheet's data
+            result.activeProfileId = result.profiles.some(p => p.id === rootState.activeProfileId) ? rootState.activeProfileId : result.profiles[0].id;
+        } else if (!linked && localHasData) {
+            if (!confirm('Sheet එකේත් මෙම උපාංගයේත් දත්ත ඇත.\n\nOK = දෙකම එකතු කරන්න (Merge)\nCancel = Sync නවත්වන්න')) {
+                setSyncStatus('Sync cancelled.');
+                return;
+            }
+            result = mergeStates(rootState, remote);
+        } else {
+            result = mergeStates(rootState, remote);
+        }
+
+        if (JSON.stringify(result) !== JSON.stringify(rootState)) {
+            rootState = result;
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(rootState));
+            renderAll();
+        }
+        if (!remote || stateSig(result) !== stateSig(remote)) {
+            const ok = await pushRemote(url, result);
+            if (!ok) throw new Error('Push failed');
+        }
+        localStorage.setItem(SYNC_LINKED_KEY, '1');
+        setSyncStatus(`Synced ✔ • ${new Date().toLocaleTimeString()}`);
+        if (manual) showToast('Google Sheet සමඟ Sync විය.');
     } catch (err) {
-        setSyncStatus('Sync failed. පසුව නැවත උත්සාහ කරන්න.');
+        console.error(err);
+        setSyncStatus('Sync failed. URL එක සහ Internet පරීක්ෂා කරන්න.');
         if (manual) showToast('Sync failed.');
     } finally {
         syncBusy = false;
-    }
-}
-/* Deleting a transaction in the app also removes its row from the Google Sheet. */
-async function syncDelete(ids) {
-    const url = getSyncUrl();
-    const done = getSyncedIds();
-    const sent = ids.filter(id => done.has(id));
-    if (!url || sent.length === 0) return;
-    try {
-        await fetch(url, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'delete', ids: sent }) });
-        sent.forEach(id => done.delete(id));
-        localStorage.setItem(SYNCED_IDS_KEY, JSON.stringify([...done]));
-    } catch (err) {
-        showToast('Sheet එකෙන් මැකීම අසාර්ථකයි. Sheet එකෙන් අතින් මකන්න.');
+        if (syncQueued) { syncQueued = false; scheduleSync(); }
     }
 }
 
-window.addEventListener('online', () => syncPending(false));
+window.addEventListener('online', () => syncNow(false));
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') syncNow(false); });
+setInterval(() => { if (document.visibilityState === 'visible') syncNow(false); }, 60000);
 
 /* PWA: register service worker (works on https / GitHub Pages) */
 if ('serviceWorker' in navigator) {
@@ -1605,5 +1663,4 @@ window.onload = () => {
     renderAll();
     const u = document.getElementById('sync-url-input');
     if (u) u.value = getSyncUrl();
-    syncPending(false);
 };
