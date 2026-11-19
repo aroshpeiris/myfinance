@@ -1,4 +1,4 @@
-    * {
+* {
         -webkit-tap-highlight-color: transparent;
         box-sizing: border-box;
     }
@@ -17,11 +17,17 @@
     }
     /* Bottom nav stays pinned; respects iPhone home-bar area */
     #bottom-nav {
-        height: calc(76px + env(safe-area-inset-bottom, 0px)) !important;
+        height: calc(66px + env(safe-area-inset-bottom, 0px)) !important;
         padding-bottom: env(safe-area-inset-bottom, 0px);
     }
+    /* Keep content clear of the iPhone status bar / notch (time, battery) */
+    @media (max-width: 639px) {
+        #app-frame { padding-top: env(safe-area-inset-top, 0px); }
+    }
+    /* First account card lines up with the page margin instead of touching the screen edge */
+    #home-cards-container { scroll-padding-left: 20px; scroll-padding-right: 20px; }
     #main-scroll {
-        padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px)) !important;
+        padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px)) !important;
         overscroll-behavior: contain;
         -webkit-overflow-scrolling: touch;
     }
