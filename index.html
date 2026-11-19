@@ -490,13 +490,13 @@
                     <h3 class="text-sm font-bold text-white flex items-center gap-2">
                         <i class="fa-solid fa-table text-limeAccent"></i> Google Sheet Sync
                     </h3>
-                    <p class="text-[11px] text-mutedText leading-relaxed">Apps Script Web app URL එක මෙහි Paste කරන්න. අලුත් ගනුදෙනු ස්වයංක්‍රීයව Sheet එකට යයි.</p>
+                    <p class="text-[11px] text-mutedText leading-relaxed">සියලුම උපාංග (Laptop, Mobile) එකම Web app URL එක භාවිතා කළ විට, දත්ත දෙපැත්තටම Sync වේ.</p>
                     <input type="url" id="sync-url-input" placeholder="https://script.google.com/macros/s/.../exec" class="w-full bg-canvas border border-borderDark rounded-xl px-3 py-2.5 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-limeAccent">
                     <div class="grid grid-cols-2 gap-2.5">
                         <button onclick="saveSyncUrl()" class="py-2.5 px-3 rounded-xl bg-limeAccent text-canvas text-xs font-bold active:scale-95 transition flex items-center justify-center gap-1.5">
                             <i class="fa-solid fa-link"></i> Save URL
                         </button>
-                        <button onclick="syncPending(true)" class="py-2.5 px-3 rounded-xl bg-canvas border border-borderDark text-white text-xs font-bold hover:border-lavenderAccent transition flex items-center justify-center gap-1.5">
+                        <button onclick="syncNow(true)" class="py-2.5 px-3 rounded-xl bg-canvas border border-borderDark text-white text-xs font-bold hover:border-lavenderAccent transition flex items-center justify-center gap-1.5">
                             <i class="fa-solid fa-rotate text-lavenderAccent"></i> Sync Now
                         </button>
                     </div>
