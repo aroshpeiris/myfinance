@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>MyFinance — Personal Wealth &amp; Passive Income</title>
+    <meta name="theme-color" content="#0F0F11">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon-192.png">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="MyFinance">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="preload" href="plus-jakarta-sans-latin-wght-normal.woff2?v=9" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="fa-solid-900.woff2?v=9" as="font" type="font/woff2" crossorigin>
+    <meta name="app-version" content="9">
+    <link rel="stylesheet" href="style.css?v=9">
+</head>
+<body class="min-h-screen flex items-center justify-center sm:py-6 sm:px-4">
+
+    <!-- Centered Mobile Phone Frame (Full-screen on Mobile, Phone Frame on Desktop) -->
+    <div id="app-frame" class="w-full max-w-[420px] h-[100dvh] sm:h-[90vh] sm:min-h-[700px] sm:max-h-[900px] bg-canvas text-white sm:rounded-[40px] sm:shadow-[0_28px_80px_rgba(0,0,0,0.45)] sm:border-[6px] sm:border-[#202026] relative flex flex-col overflow-hidden">
+
+        <!-- Scrollable Main Viewport -->
+        <main id="main-scroll" class="flex-1 overflow-y-auto no-scrollbar pb-24 relative flex flex-col">
+
+            <!-- ========================================================= -->
+            <!-- SCREEN 1: HOME (Dark Top + Crisp White Bottom Sheet)      -->
+            <!-- ========================================================= -->
+            <section id="screen-home" class="screen active flex-1">
+                <div class="px-5 pt-6 pb-6 bg-canvas shrink-0">
+                    <!-- Top Header: Greeting + Profile Switcher Pill + Bell -->
+                    <div class="flex items-center justify-between gap-2 mb-6">
+                        <div class="min-w-0">
+                            <p id="greeting-text" class="text-xs font-medium text-mutedText">Good Morning,</p>
+                            <h1 id="home-display-name" class="text-xl font-bold text-white tracking-tight truncate">Alex</h1>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <button onclick="openProfileModal()" class="h-9 px-3 rounded-full bg-surface border border-borderDark hover:border-limeAccent/50 active:scale-95 transition flex items-center gap-1.5 text-xs font-semibold text-white">
+                                <span class="w-2 h-2 rounded-full bg-limeAccent"></span>
+                                <span id="header-profile-name" class="max-w-[85px] truncate">My Profile</span>
+                                <i class="fa-solid fa-chevron-down text-[9px] text-mutedText"></i>
+                            </button>
+                            <button onclick="openBudgetAlertModal()" aria-label="Budget Alert" class="relative w-9 h-9 rounded-full bg-surface border border-borderDark flex items-center justify-center text-zinc-200 hover:border-white/20 active:scale-95 transition">
+                                <i class="fa-regular fa-bell text-sm"></i>
+                                <span id="notif-dot" class="absolute top-2 right-2 w-2 h-2 rounded-full bg-limeAccent ring-2 ring-surface"></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Live Total Balance -->
+                    <div class="mb-5">
+                        <p class="text-xs font-medium text-mutedText mb-1">Total Balance</p>
+                        <div id="home-total-balance" class="text-[34px] leading-tight font-extrabold tracking-tight text-white">
+                            LKR 0<span class="text-zinc-500 font-medium">.00</span>
+                        </div>
+                    </div>
+
+                    <!-- Quick Action Pills (Transfer, Income, Targets, Customize) -->
+                    <div class="grid grid-cols-4 gap-2 mb-7">
+                        <button onclick="openAddDrawer('Transfer')" class="py-2.5 px-2 rounded-2xl bg-surface border border-borderDark hover:border-limeAccent/40 active:scale-95 transition flex flex-col items-center justify-center gap-1.5">
+                            <span class="w-7 h-7 rounded-full bg-limeAccent/15 text-limeAccent flex items-center justify-center text-xs">
+                                <i class="fa-solid fa-right-left"></i>
+                            </span>
+                            <span class="text-[11px] font-semibold text-zinc-200">Transfer</span>
+                        </button>
+                        <button onclick="openAddDrawer('Income')" class="py-2.5 px-2 rounded-2xl bg-surface border border-borderDark hover:border-limeAccent/40 active:scale-95 transition flex flex-col items-center justify-center gap-1.5">
+                            <span class="w-7 h-7 rounded-full bg-emerald-500/15 text-emerald-400 flex items-center justify-center text-xs">
+                                <i class="fa-solid fa-arrow-down"></i>
+                            </span>
+                            <span class="text-[11px] font-semibold text-zinc-200">Income</span>
+                        </button>
+                        <button onclick="switchScreen('targets')" class="py-2.5 px-2 rounded-2xl bg-surface border border-borderDark hover:border-lavenderAccent/40 active:scale-95 transition flex flex-col items-center justify-center gap-1.5">
+                            <span class="w-7 h-7 rounded-full bg-lavenderAccent/15 text-lavenderAccent flex items-center justify-center text-xs">
+                                <i class="fa-solid fa-bullseye"></i>
+                            </span>
+                            <span class="text-[11px] font-semibold text-zinc-200">Targets</span>
+                        </button>
+                        <button onclick="switchScreen('customize')" class="py-2.5 px-2 rounded-2xl bg-surface border border-borderDark hover:border-white/25 active:scale-95 transition flex flex-col items-center justify-center gap-1.5">
+                            <span class="w-7 h-7 rounded-full bg-white/10 text-white flex items-center justify-center text-xs">
+                                <i class="fa-solid fa-sliders"></i>
+                            </span>
+                            <span class="text-[11px] font-semibold text-zinc-200">Customize</span>
+                        </button>
+                    </div>
+
+                    <!-- My Cards Header -->
+                    <div class="flex items-center justify-between mb-3">
+                        <h2 class="text-sm font-bold text-white">My Accounts</h2>
+                        <button onclick="openAccountModal()" class="text-xs font-semibold text-limeAccent hover:underline flex items-center gap-1">
+                            <i class="fa-solid fa-plus text-[10px]"></i> Add Card
+                        </button>
+                    </div>
+
+                    <!-- Horizontally Scrollable Fintech Cards Deck -->
+                    <div id="home-cards-container" class="flex gap-3.5 overflow-x-auto no-scrollbar pb-1 -mx-5 px-5 snap-x snap-mandatory">
+                        <!-- Rendered via JS -->
+                    </div>
+                </div>
+
+                <!-- Crisp White Rounded Top Sheet: Latest Transactions -->
+                <div class="flex-1 bg-white text-[#111827] rounded-t-[30px] px-5 pt-3 pb-8 shadow-[0_-8px_30px_rgba(0,0,0,0.3)] flex flex-col">
+                    <div class="w-10 h-1 rounded-full bg-gray-200 mx-auto mb-4"></div>
+
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-base font-extrabold text-[#111827]">Latest Transactions</h3>
+                        <button onclick="openHistory()" class="text-xs font-semibold text-gray-500 hover:text-[#111827] transition">See all</button>
+                    </div>
+
+                    <!-- Quick Filter Chips on Home Sheet -->
+                    <div id="home-filter-chips" class="flex gap-1.5 overflow-x-auto no-scrollbar mb-3.5 pb-0.5">
+                        <!-- Rendered via JS -->
+                    </div>
+
+                    <div id="home-recent-list" class="space-y-2.5 flex-1">
+                        <!-- Rendered via JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================================= -->
+            <!-- SCREEN 2: ANALYTICS (Wave Chart + KPIs + Bank Fees)       -->
+            <!-- ========================================================= -->
+            <section id="screen-analytics" class="screen px-5 pt-6 pb-8 space-y-5">
+                <!-- Header -->
+                <div class="flex items-center justify-between">
+                    <button onclick="switchScreen('home')" aria-label="Back" class="w-9 h-9 rounded-full bg-surface border border-borderDark flex items-center justify-center text-zinc-200 active:scale-95 transition">
+                        <i class="fa-solid fa-chevron-left text-xs"></i>
+                    </button>
+                    <h2 class="text-base font-bold text-white">Analytics</h2>
+                    <div class="flex items-center gap-2">
+                        <button onclick="shareMonthlyReport()" aria-label="Share report on WhatsApp" title="Share on WhatsApp" class="w-9 h-9 rounded-full bg-surface border border-borderDark flex items-center justify-center text-emerald-400 active:scale-95 transition">
+                            <i class="fa-brands fa-whatsapp text-sm"></i>
+                        </button>
+                        <button onclick="exportCSV()" aria-label="Export CSV" title="Export CSV" class="w-9 h-9 rounded-full bg-surface border border-borderDark flex items-center justify-center text-limeAccent active:scale-95 transition">
+                            <i class="fa-solid fa-file-arrow-down text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filter Pills: All, Income, Outcome, Passive, Bank Fees -->
+                <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-0.5">
+                    <button onclick="setAnalyticsFilter('All')" id="afill-All" class="px-3.5 py-2 rounded-full text-xs font-bold whitespace-nowrap transition"></button>
+                    <button onclick="setAnalyticsFilter('Income')" id="afill-Income" class="px-3.5 py-2 rounded-full text-xs font-bold whitespace-nowrap transition"></button>
+                    <button onclick="setAnalyticsFilter('Outcome')" id="afill-Outcome" class="px-3.5 py-2 rounded-full text-xs font-bold whitespace-nowrap transition"></button>
+                    <button onclick="setAnalyticsFilter('Passive')" id="afill-Passive" class="px-3.5 py-2 rounded-full text-xs font-bold whitespace-nowrap transition"></button>
+                    <button onclick="setAnalyticsFilter('Bank Fees')" id="afill-Bank Fees" class="px-3.5 py-2 rounded-full text-xs font-bold whitespace-nowrap transition"></button>
+                </div>
+
+                <!-- Headline Metric -->
+                <div>
+                    <p id="analytics-headline-label" class="text-xs font-medium text-mutedText">Total Balance</p>
+                    <div id="analytics-headline-value" class="text-[30px] font-extrabold tracking-tight text-white mt-0.5">
+                        LKR 0<span class="text-zinc-500 font-medium">.00</span>
+                    </div>
+                </div>
+
+                <!-- Interactive Dual-Curve SVG Wave Chart -->
+                <div class="bg-surface rounded-3xl p-4 border border-borderDark relative overflow-hidden">
+                    <div class="flex items-center justify-between text-[11px] mb-2">
+                        <div class="flex items-center gap-3">
+                            <span class="flex items-center gap-1.5 text-zinc-300"><span class="w-2.5 h-2.5 rounded-full bg-limeAccent"></span> Income</span>
+                            <span class="flex items-center gap-1.5 text-zinc-300"><span class="w-2.5 h-2.5 rounded-full bg-lavenderAccent"></span> Outcome</span>
+                        </div>
+                        <span id="chart-year-label" class="text-mutedText font-semibold"></span>
+                    </div>
+
+                    <!-- Floating Value Tooltip Pill -->
+                    <div class="relative h-[150px] w-full mt-2">
+                        <div id="chart-tooltip" class="absolute top-0 -translate-x-1/2 z-10 px-3 py-1 rounded-full bg-limeAccent text-canvas text-[11px] font-extrabold shadow-[0_4px_18px_rgba(198,244,50,0.45)] whitespace-nowrap pointer-events-none transition-all duration-200">
+                            Nov: LKR 0
+                        </div>
+                        <svg id="wave-chart-svg" viewBox="0 0 360 150" class="w-full h-full overflow-visible" style="touch-action: pan-y;">
+                            <defs>
+                                <linearGradient id="limeGrad" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stop-color="#C6F432" stop-opacity="0.28"/>
+                                    <stop offset="100%" stop-color="#C6F432" stop-opacity="0"/>
+                                </linearGradient>
+                                <linearGradient id="lavGrad" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stop-color="#B8B8FF" stop-opacity="0.24"/>
+                                    <stop offset="100%" stop-color="#B8B8FF" stop-opacity="0"/>
+                                </linearGradient>
+                                <linearGradient id="beamGrad" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stop-color="#C6F432" stop-opacity="0.25"/>
+                                    <stop offset="100%" stop-color="#C6F432" stop-opacity="0"/>
+                                </linearGradient>
+                            </defs>
+                            <g id="chart-layers"></g>
+                        </svg>
+                    </div>
+
+                    <!-- Clickable Month Selector -->
+                    <div id="chart-month-bar" class="grid grid-cols-7 gap-1 mt-2 pt-2 border-t border-borderDark/70 text-center">
+                        <!-- Rendered via JS -->
+                    </div>
+                </div>
+
+                <!-- 2x2 KPI Cards (Income, Outcome, Net Savings, Bank Fees) -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-surface rounded-2xl p-4 border border-borderDark">
+                        <div class="w-8 h-8 rounded-xl bg-limeAccent text-canvas flex items-center justify-center text-xs mb-3">
+                            <i class="fa-solid fa-arrow-trend-up"></i>
+                        </div>
+                        <p id="kpi-income" class="text-base font-extrabold text-white truncate">LKR 0</p>
+                        <p class="text-[11px] text-mutedText mt-0.5">This Month Income</p>
+                    </div>
+                    <div class="bg-surface rounded-2xl p-4 border border-borderDark">
+                        <div class="w-8 h-8 rounded-xl bg-lavenderAccent text-canvas flex items-center justify-center text-xs mb-3">
+                            <i class="fa-solid fa-arrow-trend-down"></i>
+                        </div>
+                        <p id="kpi-outcome" class="text-base font-extrabold text-white truncate">LKR 0</p>
+                        <p class="text-[11px] text-mutedText mt-0.5">This Month Outcome</p>
+                    </div>
+                    <div class="bg-surface rounded-2xl p-4 border border-borderDark">
+                        <div class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs mb-3">
+                            <i class="fa-solid fa-piggy-bank"></i>
+                        </div>
+                        <p id="kpi-savings" class="text-base font-extrabold text-white truncate">LKR 0</p>
+                        <p class="text-[11px] text-mutedText mt-0.5">Net Savings</p>
+                    </div>
+                    <div class="bg-surface rounded-2xl p-4 border border-borderDark">
+                        <div class="w-8 h-8 rounded-xl bg-dangerRed/20 text-dangerRed flex items-center justify-center text-xs mb-3">
+                            <i class="fa-solid fa-building-columns"></i>
+                        </div>
+                        <p id="kpi-bank-fees" class="text-base font-extrabold text-dangerRed truncate">LKR 0</p>
+                        <p class="text-[11px] text-mutedText mt-0.5">Month Bank Fees</p>
+                    </div>
+                </div>
+
+                <!-- Lavender Insight Banner -->
+                <button onclick="switchScreen('targets')" class="w-full text-left rounded-2xl p-4 bg-lavenderAccent text-canvas flex items-center justify-between gap-3 active:scale-[0.98] transition shadow-md">
+                    <div class="min-w-0">
+                        <p id="insight-title" class="text-sm font-extrabold truncate">0% of Monthly Budget Used</p>
+                        <p id="insight-sub" class="text-[11px] font-semibold text-canvas/75 truncate mt-0.5">Tap to view targets &amp; category limits</p>
+                    </div>
+                    <span class="w-8 h-8 rounded-full bg-canvas/10 flex items-center justify-center shrink-0">
+                        <i class="fa-solid fa-chevron-right text-xs"></i>
+                    </span>
+                </button>
+
+                <!-- Filtered Transactions History -->
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-sm font-bold text-white">Transactions History</h3>
+                        <span id="analytics-history-count" class="text-[11px] text-mutedText">0 records</span>
+                    </div>
+                    <div id="analytics-history-list" class="space-y-2.5">
+                        <!-- Rendered via JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================================= -->
+            <!-- SCREEN: TRANSACTION HISTORY (calendar view)               -->
+            <!-- ========================================================= -->
+            <section id="screen-history" class="screen px-5 pt-6 pb-8 space-y-4">
+                <div class="flex items-center justify-between">
+                    <button onclick="switchScreen('home')" aria-label="Back" class="w-9 h-9 rounded-full bg-surface border border-borderDark flex items-center justify-center text-zinc-200 active:scale-95 transition">
+                        <i class="fa-solid fa-chevron-left text-xs"></i>
+                    </button>
+                    <h2 class="text-base font-bold text-white">Transaction History</h2>
+                    <button onclick="historyGoToday()" class="px-3 h-9 rounded-full bg-surface border border-borderDark text-limeAccent text-[11px] font-bold active:scale-95 transition">Today</button>
+                </div>
+
+                <!-- Month switcher -->
+                <div class="flex items-center justify-between bg-surface rounded-2xl border border-borderDark p-1.5">
+                    <button onclick="historyShift(-1)" aria-label="Previous month" class="w-10 h-10 rounded-xl text-zinc-300 hover:text-white active:scale-90 transition"><i class="fa-solid fa-chevron-left text-xs"></i></button>
+                    <p id="history-month-label" class="text-sm font-extrabold text-white"></p>
+                    <button onclick="historyShift(1)" aria-label="Next month" class="w-10 h-10 rounded-xl text-zinc-300 hover:text-white active:scale-90 transition"><i class="fa-solid fa-chevron-right text-xs"></i></button>
+                </div>
+
+                <!-- Month summary -->
+                <div id="history-summary" class="grid grid-cols-3 gap-2"></div>
+
+                <!-- Calendar -->
+                <div class="bg-surface rounded-3xl border border-borderDark p-3">
+                    <div class="grid grid-cols-7 gap-1 mb-1.5 text-center text-[10px] font-bold text-mutedText">
+                        <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+                    </div>
+                    <div id="history-cal" class="grid grid-cols-7 gap-1"></div>
+                    <p class="text-[10px] text-mutedText mt-2 px-1"><span class="text-dangerRed font-bold">Red</span> = expense • <span class="text-limeAccent font-bold">Green</span> = income • Tap a day to see its transactions</p>
+                </div>
+
+                <!-- Search + type chips -->
+                <input type="search" id="history-search" oninput="setHistorySearch(this.value)" placeholder="Search note, category, account..." class="w-full bg-surface border border-borderDark rounded-2xl px-4 py-3 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-limeAccent">
+                <div id="history-chips" class="flex items-center gap-2 overflow-x-auto no-scrollbar"></div>
+
+                <!-- List -->
+                <div class="flex items-center justify-between">
+                    <h3 id="history-list-title" class="text-sm font-bold text-white"></h3>
+                    <button id="history-add-btn" onclick="historyAddOnDay()" class="hidden px-3 py-1.5 rounded-full bg-limeAccent text-canvas text-[11px] font-extrabold active:scale-95 transition"><i class="fa-solid fa-plus mr-1"></i>Add</button>
+                </div>
+                <div id="history-list" class="space-y-2"></div>
+            </section>
+
+            <!-- ========================================================= -->
+            <!-- SCREEN 3: TARGETS & PASSIVE INCOME FREEDOM INDEX          -->
+            <!-- ========================================================= -->
+            <section id="screen-targets" class="screen px-5 pt-6 pb-8 space-y-5">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-mutedText">Wealth &amp; Discipline</p>
+                        <h2 class="text-lg font-extrabold text-white">Targets &amp; Passive</h2>
+                    </div>
+                    <button onclick="openTargetsDrawer()" class="px-3.5 py-2 rounded-full bg-limeAccent text-canvas text-xs font-extrabold active:scale-95 transition flex items-center gap-1.5 shadow-[0_4px_14px_rgba(198,244,50,0.3)]">
+                        <i class="fa-solid fa-pen text-[10px]"></i> Edit Targets
+                    </button>
+                </div>
+
+                <!-- Passive Income Freedom Index Card -->
+                <div class="bg-surface rounded-3xl p-5 border border-borderDark relative overflow-hidden">
+                    <div class="absolute -top-12 -right-12 w-36 h-36 rounded-full bg-lavenderAccent/15 blur-2xl pointer-events-none"></div>
+                    <div class="absolute -bottom-12 -left-12 w-36 h-36 rounded-full bg-limeAccent/10 blur-2xl pointer-events-none"></div>
+
+                    <div class="relative z-10">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="px-2.5 py-1 rounded-full bg-lavenderAccent/20 text-lavenderAccent text-[10px] font-extrabold uppercase tracking-wider">
+                                Passive Freedom Index
+                            </span>
+                            <button onclick="openTargetsDrawer()" class="text-[11px] font-bold text-limeAccent hover:underline flex items-center gap-1">
+                                Edit <i class="fa-solid fa-pen text-[9px]"></i>
+                            </button>
+                        </div>
+
+                        <p class="text-xs text-mutedText">Monthly Passive Income</p>
+                        <div class="flex items-baseline justify-between gap-2 mt-0.5 mb-3">
+                            <div id="targets-passive-total" class="text-2xl font-extrabold text-white">LKR 0.00</div>
+                            <span id="targets-passive-goal" class="text-[11px] font-bold text-lavenderAccent">Goal: LKR 10,000</span>
+                        </div>
+
+                        <div class="w-full h-2.5 rounded-full bg-canvas overflow-hidden mb-2">
+                            <div id="targets-passive-bar" class="h-full rounded-full bg-gradient-to-r from-lavenderAccent to-limeAccent transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                        <div class="flex items-center justify-between text-[11px]">
+                            <span id="targets-passive-coverage" class="text-limeAccent font-bold">0.0% of expenses covered</span>
+                            <span id="targets-passive-goal-pct" class="text-mutedText font-semibold">0% of goal</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Monthly Expense Budget Card -->
+                <div class="bg-surface rounded-3xl p-5 border border-borderDark space-y-3.5">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-sm font-bold text-white">Monthly Expense Budget</h3>
+                            <p class="text-[11px] text-mutedText">Income Target: <strong id="targets-income-display" class="text-zinc-200">LKR 0</strong></p>
+                        </div>
+                        <button onclick="openTargetsDrawer()" class="px-2.5 py-1 rounded-lg bg-canvas border border-borderDark text-[11px] font-semibold text-zinc-300 hover:text-limeAccent">Edit</button>
+                    </div>
+                    <div>
+                        <div class="flex items-center justify-between text-xs mb-1.5">
+                            <span class="text-mutedText">Spent: <strong id="targets-spent-display" class="text-white">LKR 0</strong></span>
+                            <span id="targets-cap-display" class="font-bold text-lavenderAccent">Cap: LKR 0</span>
+                        </div>
+                        <div class="w-full h-3 rounded-full bg-canvas overflow-hidden">
+                            <div id="targets-budget-bar" class="h-full rounded-full bg-limeAccent transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Monthly Savings Goal & Custom Goal Grid -->
+                <div class="grid grid-cols-1 gap-3.5">
+                    <!-- Savings Goal -->
+                    <div class="bg-surface rounded-3xl p-4 border border-borderDark">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-piggy-bank text-limeAccent"></i> Monthly Savings Goal
+                            </span>
+                            <span id="targets-savings-pct" class="text-xs font-extrabold text-limeAccent">0%</span>
+                        </div>
+                        <div class="w-full h-2 rounded-full bg-canvas overflow-hidden mb-2">
+                            <div id="targets-savings-bar" class="h-full rounded-full bg-limeAccent transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                        <div class="flex items-center justify-between text-[11px] text-mutedText">
+                            <span>Net Saved: <strong id="targets-savings-actual" class="text-white">LKR 0</strong></span>
+                            <span>Goal: <strong id="targets-savings-goal" class="text-zinc-200">LKR 0</strong></span>
+                        </div>
+                    </div>
+
+                    <!-- Custom Goal Card -->
+                    <div class="bg-surface rounded-3xl p-4 border border-borderDark">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-flag-checkered text-lavenderAccent"></i>
+                                <span id="targets-custom-name">September Target</span>
+                            </span>
+                            <button onclick="openTargetsDrawer()" class="text-[11px] font-semibold text-lavenderAccent hover:underline">Edit</button>
+                        </div>
+                        <div class="w-full h-2 rounded-full bg-canvas overflow-hidden mb-2">
+                            <div id="targets-custom-bar" class="h-full rounded-full bg-lavenderAccent transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                        <div class="flex items-center justify-between text-[11px] text-mutedText">
+                            <span>Current: <strong id="targets-custom-current" class="text-white">LKR 0</strong></span>
+                            <span>Target: <strong id="targets-custom-amount" class="text-zinc-200">LKR 0</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Per-Category Spending Caps -->
+                <div class="bg-surface rounded-3xl p-5 border border-borderDark">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-sm font-bold text-white">Category Spending Caps</h3>
+                        <button onclick="openTargetsDrawer()" class="text-[11px] font-bold text-limeAccent hover:underline">Edit Caps</button>
+                    </div>
+                    <div id="targets-categories-list" class="space-y-4">
+                        <!-- Rendered via JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================================= -->
+            <!-- SCREEN 4: CUSTOMIZE (100% Customizable Setup & Profiles)  -->
+            <!-- ========================================================= -->
+            <section id="screen-customize" class="screen px-5 pt-6 pb-8 space-y-5">
+                <div>
+                    <p class="text-xs font-medium text-mutedText">Personalize Everything</p>
+                    <h2 class="text-lg font-extrabold text-white">Customize &amp; Profiles</h2>
+                </div>
+
+                <!-- 1. Multi-Profile Switcher Card -->
+                <div class="bg-surface rounded-3xl p-5 border border-borderDark space-y-3.5">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-users text-limeAccent"></i> Profiles (You &amp; Friends)
+                        </h3>
+                        <button onclick="openCreateProfileModal()" class="px-3 py-1.5 rounded-full bg-limeAccent text-canvas text-[11px] font-extrabold active:scale-95 transition">
+                            + Add Profile
+                        </button>
+                    </div>
+                    <p class="text-[11px] text-mutedText leading-relaxed">
+                        Create a separate test profile for your friend so their transactions, accounts, and targets stay 100% isolated from yours.
+                    </p>
+                    <div id="customize-profiles-list" class="space-y-2">
+                        <!-- Rendered via JS -->
+                    </div>
+                </div>
+
+                <!-- 2. Profile Display Name & Currency -->
+                <div class="bg-surface rounded-3xl p-5 border border-borderDark space-y-3.5">
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-id-badge text-lavenderAccent"></i> Profile &amp; Currency
+                    </h3>
+                    <div class="grid grid-cols-5 gap-2.5">
+                        <div class="col-span-3">
+                            <label class="block text-[11px] text-mutedText mb-1">Display Name</label>
+                            <input type="text" id="cust-display-name" maxlength="24" class="w-full bg-canvas border border-borderDark rounded-xl px-3 py-2.5 text-xs font-bold text-white focus:outline-none focus:border-limeAccent">
+                        </div>
+                        <div class="col-span-2">
+                            <label class="block text-[11px] text-mutedText mb-1">Currency</label>
+                            <input type="text" id="cust-currency" maxlength="5" placeholder="LKR" class="w-full bg-canvas border border-borderDark rounded-xl px-3 py-2.5 text-xs font-bold text-white uppercase focus:outline-none focus:border-limeAccent">
+                        </div>
+                    </div>
+                    <div class="flex gap-1.5 flex-wrap">
+                        <button type="button" onclick="quickSetCurrency('LKR')" class="px-2.5 py-1 rounded-lg bg-canvas border border-borderDark text-[10px] font-bold text-zinc-300 hover:border-limeAccent">LKR</button>
+                        <button type="button" onclick="quickSetCurrency('USD')" class="px-2.5 py-1 rounded-lg bg-canvas border border-borderDark text-[10px] font-bold text-zinc-300 hover:border-limeAccent">USD</button>
+                        <button type="button" onclick="quickSetCurrency('EUR')" class="px-2.5 py-1 rounded-lg bg-canvas border border-borderDark text-[10px] font-bold text-zinc-300 hover:border-limeAccent">EUR</button>
+                        <button type="button" onclick="quickSetCurrency('GBP')" class="px-2.5 py-1 rounded-lg bg-canvas border border-borderDark text-[10px] font-bold text-zinc-300 hover:border-limeAccent">GBP</button>
+                        <button type="button" onclick="quickSetCurrency('INR')" class="px-2.5 py-1 rounded-lg bg-canvas border border-borderDark text-[10px] font-bold text-zinc-300 hover:border-limeAccent">INR</button>
+                    </div>
+                    <button onclick="saveProfileBasics()" class="w-full py-2.5 rounded-xl bg-limeAccent text-canvas text-xs font-extrabold active:scale-[0.98] transition">
+                        Save Profile Info
+                    </button>
+                </div>
+
+                <!-- 3. Manage Accounts / Cards -->
+                <div class="bg-surface rounded-3xl p-5 border border-borderDark space-y-3.5">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                            <i class="fa-regular fa-credit-card text-limeAccent"></i> Accounts &amp; Cards
+                        </h3>
+                        <button onclick="openAccountModal()" class="px-3 py-1.5 rounded-full bg-canvas border border-borderDark text-limeAccent text-[11px] font-bold hover:border-limeAccent transition">
+                            + Add Account
+                        </button>
+                    </div>
+                    <div id="customize-accounts-list" class="space-y-2">
+                        <!-- Rendered via JS -->
+                    </div>
+                </div>
+
+                <!-- 4. Manage Categories (Expense & Income) -->
+                <div class="bg-surface rounded-3xl p-5 border border-borderDark space-y-3.5">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-layer-group text-lavenderAccent"></i> Categories
+                        </h3>
+                        <button onclick="openCategoryModal()" class="px-3 py-1.5 rounded-full bg-canvas border border-borderDark text-lavenderAccent text-[11px] font-bold hover:border-lavenderAccent transition">
+                            + Add Category
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-1.5 bg-canvas p-1 rounded-xl border border-borderDark">
+                        <button onclick="setCustomizeCatTab('Expense')" id="cust-cat-tab-Expense" class="py-1.5 rounded-lg text-xs font-bold transition"></button>
+                        <button onclick="setCustomizeCatTab('Income')" id="cust-cat-tab-Income" class="py-1.5 rounded-lg text-xs font-bold transition"></button>
+                    </div>
+                    <div id="customize-categories-list" class="space-y-2 max-h-[280px] overflow-y-auto no-scrollbar">
+                        <!-- Rendered via JS -->
+                    </div>
+                </div>
+
+                <!-- 5. Targets Editor Shortcut -->
+                <div class="bg-surface rounded-3xl p-5 border border-borderDark space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-bullseye text-limeAccent"></i> All Financial Targets
+                        </h3>
+                        <span class="text-[10px] font-bold text-limeAccent bg-limeAccent/15 px-2 py-0.5 rounded-full">Live</span>
+                    </div>
+                    <button onclick="openTargetsDrawer()" class="w-full py-3 rounded-xl bg-canvas border border-borderDark hover:border-limeAccent text-white text-xs font-bold transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-sliders text-limeAccent"></i> Open Full Targets Editor
+                    </button>
+                </div>
+
+                <!-- 5b. Google Sheet Auto-Sync -->
+                <div class="bg-surface rounded-3xl p-5 border border-borderDark space-y-3">
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-table text-limeAccent"></i> Google Sheet Sync
+                    </h3>
+                    <p class="text-[11px] text-mutedText leading-relaxed">Use the same Web app URL on every device (laptop, phone). Data syncs both ways and stays identical everywhere.</p>
+                    <input type="url" id="sync-url-input" placeholder="https://script.google.com/macros/s/.../exec" class="w-full bg-canvas border border-borderDark rounded-xl px-3 py-2.5 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-limeAccent">
+                    <div class="grid grid-cols-2 gap-2.5">
+                        <button onclick="saveSyncUrl()" class="py-2.5 px-3 rounded-xl bg-limeAccent text-canvas text-xs font-bold active:scale-95 transition flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-link"></i> Save URL
+                        </button>
+                        <button onclick="syncNow(true)" class="py-2.5 px-3 rounded-xl bg-canvas border border-borderDark text-white text-xs font-bold hover:border-lavenderAccent transition flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-rotate text-lavenderAccent"></i> Sync Now
+                        </button>
+                    </div>
+                    <p id="sync-status" class="text-[11px] text-mutedText"></p>
+                    <div class="flex items-center justify-between pt-2 border-t border-borderDark">
+                        <p class="text-[11px] text-mutedText">App version <span class="text-white font-bold">6</span></p>
+                        <button onclick="forceUpdateApp()" class="px-3 py-1.5 rounded-lg bg-canvas border border-borderDark text-[11px] font-bold text-limeAccent active:scale-95 transition"><i class="fa-solid fa-arrows-rotate mr-1"></i>Update App</button>
+                    </div>
+                </div>
+
+                <!-- 6. Data Tools (CSV & Full JSON Backup) -->
+                <div class="bg-surface rounded-3xl p-5 border border-borderDark space-y-3">
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-database text-lavenderAccent"></i> Backup &amp; Excel CSV
+                    </h3>
+                    <input type="file" id="csv-import-input" accept=".csv" class="hidden" onchange="handleCSVImport(event)">
+                    <input type="file" id="json-restore-input" accept=".json" class="hidden" onchange="handleJSONRestore(event)">
+                    <div class="grid grid-cols-2 gap-2.5">
+                        <button onclick="exportCSV()" class="py-2.5 px-3 rounded-xl bg-canvas border border-borderDark text-white text-xs font-bold hover:border-limeAccent transition flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-file-export text-limeAccent"></i> Export CSV
+                        </button>
+                        <button onclick="document.getElementById('csv-import-input').click()" class="py-2.5 px-3 rounded-xl bg-canvas border border-borderDark text-white text-xs font-bold hover:border-lavenderAccent transition flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-file-import text-lavenderAccent"></i> Import CSV
+                        </button>
+                        <button onclick="backupJSON()" class="py-2.5 px-3 rounded-xl bg-canvas border border-borderDark text-white text-xs font-bold hover:border-limeAccent transition flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-download text-limeAccent"></i> Backup JSON
+                        </button>
+                        <button onclick="document.getElementById('json-restore-input').click()" class="py-2.5 px-3 rounded-xl bg-canvas border border-borderDark text-white text-xs font-bold hover:border-lavenderAccent transition flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-upload text-lavenderAccent"></i> Restore JSON
+                        </button>
+                    </div>
+                    <button onclick="confirmResetCurrentProfile()" class="w-full py-2.5 rounded-xl bg-dangerRed/15 border border-dangerRed/30 text-dangerRed text-xs font-bold hover:bg-dangerRed/25 transition mt-1">
+                        Reset Current Profile
+                    </button>
+                </div>
+
+                <p class="text-center text-[11px] text-mutedText pb-2">
+                    MyFinance PWA • Multi-Profile Local Storage
+                </p>
+            </section>
+        </main>
+
+        <!-- ========================================================= -->
+        <!-- FLOATING BOTTOM NAVIGATION BAR (4 Tabs + Center Lime +)   -->
+        <!-- ========================================================= -->
+        <nav id="bottom-nav" class="absolute bottom-0 left-0 right-0 h-[76px] px-4 flex items-center justify-between z-30 transition-colors duration-200 bg-white border-t border-gray-200 text-gray-400">
+            <button onclick="switchScreen('home')" id="nav-btn-home" class="flex flex-col items-center justify-center gap-1 w-16 py-1 text-canvas font-bold">
+                <i class="fa-solid fa-house text-lg"></i>
+                <span class="text-[10px]">Home</span>
+            </button>
+
+            <button onclick="switchScreen('analytics')" id="nav-btn-analytics" class="flex flex-col items-center justify-center gap-1 w-16 py-1">
+                <i class="fa-solid fa-chart-line text-lg"></i>
+                <span class="text-[10px]">Analytics</span>
+            </button>
+
+            <!-- Prominent Center Circular Lime-Green Quick Add Button -->
+            <div class="relative -top-5">
+                <button onclick="openAddDrawer('Expense')" aria-label="Quick Add Transaction" class="w-14 h-14 rounded-full bg-limeAccent text-canvas shadow-[0_8px_24px_rgba(198,244,50,0.5)] flex items-center justify-center hover:scale-105 active:scale-95 transition border-4 border-canvas/10">
+                    <i class="fa-solid fa-plus text-xl font-black"></i>
+                </button>
+            </div>
+
+            <button onclick="switchScreen('targets')" id="nav-btn-targets" class="flex flex-col items-center justify-center gap-1 w-16 py-1">
+                <i class="fa-solid fa-bullseye text-lg"></i>
+                <span class="text-[10px]">Targets</span>
+            </button>
+
+            <button onclick="switchScreen('customize')" id="nav-btn-customize" class="flex flex-col items-center justify-center gap-1 w-16 py-1">
+                <i class="fa-solid fa-sliders text-lg"></i>
+                <span class="text-[10px]">Customize</span>
+            </button>
+        </nav>
+
+        <!-- ========================================================= -->
+        <!-- QUICK ADD TRANSACTION DRAWER (With Bank Transfer Fee)     -->
+        <!-- ========================================================= -->
+        <div id="add-drawer" class="fixed inset-0 z-50 hidden flex items-end justify-center">
+            <div onclick="closeAddDrawer()" class="drawer-backdrop absolute inset-0 bg-black/75 backdrop-blur-sm"></div>
+            <div id="add-drawer-panel" class="drawer-panel relative w-full max-w-[420px] bg-[#16161A] text-white rounded-t-[32px] p-6 pb-8 border-t border-borderDark shadow-2xl max-h-[92vh] overflow-y-auto no-scrollbar translate-y-full">
+                <div class="w-10 h-1 rounded-full bg-white/20 mx-auto mb-4"></div>
+
+                <div class="flex items-center justify-between mb-4">
+                    <h3 id="drawer-title" class="text-lg font-extrabold text-white">Add Transaction</h3>
+                    <button onclick="closeAddDrawer()" class="w-8 h-8 rounded-full bg-surface border border-borderDark flex items-center justify-center text-zinc-300">
+                        <i class="fa-solid fa-xmark text-sm"></i>
+                    </button>
+                </div>
+
+                <!-- Type Tabs: Expense | Income | Transfer -->
+                <div class="grid grid-cols-3 gap-1.5 bg-canvas p-1.5 rounded-2xl border border-borderDark mb-4">
+                    <button type="button" onclick="setDrawerType('Expense')" id="dtype-Expense" class="py-2 rounded-xl text-xs font-extrabold transition">Expense</button>
+                    <button type="button" onclick="setDrawerType('Income')" id="dtype-Income" class="py-2 rounded-xl text-xs font-extrabold transition">Income</button>
+                    <button type="button" onclick="setDrawerType('Transfer')" id="dtype-Transfer" class="py-2 rounded-xl text-xs font-extrabold transition">Transfer</button>
+                </div>
+
+                <form id="tx-form" onsubmit="handleSaveTransaction(event)" class="space-y-3.5">
+                    <!-- Amount -->
+                    <div>
+                        <label id="tx-amount-label" class="block text-[11px] font-semibold text-mutedText mb-1">Amount (LKR)</label>
+                        <input type="number" step="0.01" min="0.01" id="tx-amount" oninput="updateTransferPreview()" placeholder="0.00" required class="w-full bg-canvas border border-borderDark rounded-2xl px-4 py-3 text-xl font-extrabold text-white focus:outline-none focus:border-limeAccent">
+                    </div>
+
+                    <!-- Account / From Account -->
+                    <div>
+                        <label id="tx-account-label" class="block text-[11px] font-semibold text-mutedText mb-1">Account</label>
+                        <select id="tx-account" onchange="updateTransferPreview()" class="w-full bg-canvas border border-borderDark rounded-xl px-3.5 py-2.5 text-xs font-bold text-white focus:outline-none focus:border-limeAccent"></select>
+                    </div>
+
+                    <!-- Transfer-Only: To Account + Bank Fee + Live Breakdown -->
+                    <div id="tx-transfer-section" class="hidden space-y-3.5">
+                        <div>
+                            <label class="block text-[11px] font-semibold text-mutedText mb-1">To Account</label>
+                            <select id="tx-to-account" onchange="updateTransferPreview()" class="w-full bg-canvas border border-borderDark rounded-xl px-3.5 py-2.5 text-xs font-bold text-white focus:outline-none focus:border-limeAccent"></select>
+                        </div>
+
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <label id="tx-fee-label" class="text-[11px] font-semibold text-mutedText">Bank / Transfer Fee (Optional)</label>
+                                <button type="button" onclick="setTransferFee(0, true)" class="text-[10px] font-bold text-mutedText hover:text-white">Reset 0</button>
+                            </div>
+                            <input type="number" step="0.01" min="0" id="tx-fee" value="0" oninput="updateTransferPreview()" placeholder="0.00" class="w-full bg-canvas border border-borderDark rounded-xl px-3.5 py-2.5 text-sm font-bold text-dangerRed focus:outline-none focus:border-dangerRed">
+
+                            <!-- Quick-tap Fee Chips -->
+                            <div class="flex items-center gap-2 mt-2">
+                                <button type="button" onclick="setTransferFee(20, false)" class="flex-1 py-1.5 rounded-lg bg-surface border border-borderDark hover:border-limeAccent text-[11px] font-bold text-zinc-200 active:scale-95 transition">+20</button>
+                                <button type="button" onclick="setTransferFee(30, false)" class="flex-1 py-1.5 rounded-lg bg-surface border border-borderDark hover:border-limeAccent text-[11px] font-bold text-zinc-200 active:scale-95 transition">+30</button>
+                                <button type="button" onclick="setTransferFee(50, false)" class="flex-1 py-1.5 rounded-lg bg-surface border border-borderDark hover:border-limeAccent text-[11px] font-bold text-zinc-200 active:scale-95 transition">+50</button>
+                                <button type="button" onclick="setTransferFee(100, false)" class="flex-1 py-1.5 rounded-lg bg-surface border border-borderDark hover:border-limeAccent text-[11px] font-bold text-zinc-200 active:scale-95 transition">+100</button>
+                            </div>
+                        </div>
+
+                        <!-- Live Transfer Breakdown Preview Box -->
+                        <div id="transfer-preview-box" class="rounded-2xl p-3.5 bg-surface border border-limeAccent/30 space-y-1.5 text-[11px]">
+                            <div class="flex items-center justify-between">
+                                <span class="text-mutedText">Deducted from <strong id="prev-from" class="text-white">-</strong>:</span>
+                                <strong id="prev-deducted" class="text-dangerRed">0.00</strong>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-mutedText">Received by <strong id="prev-to" class="text-white">-</strong>:</span>
+                                <strong id="prev-received" class="text-limeAccent">0.00</strong>
+                            </div>
+                            <div id="prev-fee-note" class="hidden pt-1.5 mt-1 border-t border-borderDark text-lavenderAccent font-semibold flex items-center gap-1.5">
+                                <i class="fa-solid fa-building-columns text-[10px]"></i>
+                                <span>Fee auto-logged under 🏦 Bank Fees</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Category (Hidden for Transfer) -->
+                    <div id="tx-category-wrap">
+                        <label class="block text-[11px] font-semibold text-mutedText mb-1">Category</label>
+                        <select id="tx-category" class="w-full bg-canvas border border-borderDark rounded-xl px-3.5 py-2.5 text-xs font-bold text-white focus:outline-none focus:border-limeAccent"></select>
+                    </div>
+
+                    <!-- Date & Time -->
+                    <div>
+                        <label class="block text-[11px] font-semibold text-mutedText mb-1">Date &amp; Time</label>
+                        <input type="datetime-local" id="tx-date" required class="w-full bg-canvas border border-borderDark rounded-xl px-3.5 py-2.5 text-xs font-bold text-white focus:outline-none focus:border-limeAccent">
+                    </div>
+
+                    <!-- Note -->
+                    <div>
+                        <label class="block text-[11px] font-semibold text-mutedText mb-1">Note (Optional)</label>
+                        <input type="text" id="tx-note" maxlength="60" placeholder="e.g. Lunch, CEFT Transfer, Dividend" class="w-full bg-canvas border border-borderDark rounded-xl px-3.5 py-2.5 text-xs font-medium text-white focus:outline-none focus:border-limeAccent">
+                    </div>
+
+                    <button type="submit" id="tx-submit-btn" class="w-full py-3.5 rounded-2xl bg-limeAccent text-canvas text-sm font-extrabold shadow-[0_8px_22px_rgba(198,244,50,0.3)] hover:brightness-105 active:scale-[0.98] transition">
+                        Save Transaction
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- TARGETS EDITOR DRAWER                                     -->
+        <!-- ========================================================= -->
+        <div id="targets-drawer" class="fixed inset-0 z-50 hidden flex items-end justify-center">
+            <div onclick="closeTargetsDrawer()" class="drawer-backdrop absolute inset-0 bg-black/75 backdrop-blur-sm"></div>
+            <div id="targets-drawer-panel" class="drawer-panel relative w-full max-w-[420px] bg-[#16161A] text-white rounded-t-[32px] p-6 pb-8 border-t border-borderDark shadow-2xl max-h-[90vh] overflow-y-auto no-scrollbar translate-y-full">
+                <div class="w-10 h-1 rounded-full bg-white/20 mx-auto mb-4"></div>
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="text-lg font-extrabold text-white">Edit All Targets</h3>
+                        <p class="text-[11px] text-mutedText">Updates budgets, charts &amp; alerts instantly</p>
+                    </div>
+                    <button onclick="closeTargetsDrawer()" class="w-8 h-8 rounded-full bg-surface border border-borderDark flex items-center justify-center text-zinc-300">
+                        <i class="fa-solid fa-xmark text-sm"></i>
+                    </button>
+                </div>
+
+                <form onsubmit="saveTargets(event)" class="space-y-4">
+                    <div class="bg-canvas rounded-2xl p-4 border border-borderDark space-y-3">
+                        <h4 class="text-[11px] font-extrabold uppercase tracking-wider text-limeAccent">Monthly Core Targets</h4>
+                        <div class="grid grid-cols-2 gap-2.5">
+                            <div>
+                                <label class="block text-[10px] text-mutedText mb-1">Income Target</label>
+                                <input type="number" min="0" step="1" id="t-income" required class="w-full bg-surface border border-borderDark rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-limeAccent">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-mutedText mb-1">Expense Budget Cap</label>
+                                <input type="number" min="1" step="1" id="t-budget" required class="w-full bg-surface border border-borderDark rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-limeAccent">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-mutedText mb-1">Savings Goal</label>
+                                <input type="number" min="0" step="1" id="t-savings" required class="w-full bg-surface border border-borderDark rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-limeAccent">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-mutedText mb-1">Passive Income Goal</label>
+                                <input type="number" min="1" step="1" id="t-passive" required class="w-full bg-surface border border-borderDark rounded-xl px-3 py-2 text-xs font-bold text-lavenderAccent focus:outline-none focus:border-lavenderAccent">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-canvas rounded-2xl p-4 border border-borderDark space-y-3">
+                        <h4 class="text-[11px] font-extrabold uppercase tracking-wider text-lavenderAccent">Custom Goal Card</h4>
+                        <div class="grid grid-cols-2 gap-2.5">
+                            <div>
+                                <label class="block text-[10px] text-mutedText mb-1">Goal Name</label>
+                                <input type="text" id="t-goal-name" maxlength="24" required class="w-full bg-surface border border-borderDark rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-lavenderAccent">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-mutedText mb-1">Target Amount</label>
+                                <input type="number" min="1" step="1" id="t-goal-amount" required class="w-full bg-surface border border-borderDark rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-lavenderAccent">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-mutedText mb-1">Linked Account for Goal Balance</label>
+                            <select id="t-goal-account" class="w-full bg-surface border border-borderDark rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-lavenderAccent"></select>
+                        </div>
+                    </div>
+
+                    <div class="bg-canvas rounded-2xl p-4 border border-borderDark space-y-3">
+                        <div class="flex items-center justify-between">
+                            <h4 class="text-[11px] font-extrabold uppercase tracking-wider text-zinc-300">Expense Category Caps</h4>
+                            <span id="t-caps-sum" class="text-[11px] font-bold text-limeAccent">Total: 0</span>
+                        </div>
+                        <div id="t-category-caps-grid" class="grid grid-cols-2 gap-2.5"></div>
+                    </div>
+
+                    <button type="submit" class="w-full py-3.5 rounded-2xl bg-limeAccent text-canvas text-sm font-extrabold active:scale-[0.98] transition">
+                        Save All Targets
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- ACCOUNT ADD / EDIT MODAL                                  -->
+        <!-- ========================================================= -->
+        <div id="account-modal" class="fixed inset-0 z-[55] hidden flex items-center justify-center p-4">
+            <div onclick="closeAccountModal()" class="absolute inset-0 bg-black/75 backdrop-blur-sm"></div>
+            <div class="relative w-full max-w-[360px] bg-surface border border-borderDark rounded-3xl p-5 shadow-2xl">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 id="acc-modal-title" class="text-base font-extrabold text-white">Add Account</h3>
+                    <button onclick="closeAccountModal()" class="w-7 h-7 rounded-full bg-canvas flex items-center justify-center text-zinc-400">
+                        <i class="fa-solid fa-xmark text-xs"></i>
+                    </button>
+                </div>
+                <form onsubmit="saveAccountForm(event)" class="space-y-3">
+                    <input type="hidden" id="acc-edit-id">
+                    <div>
+                        <label class="block text-[11px] text-mutedText mb-1">Account / Card Name</label>
+                        <input type="text" id="acc-name" maxlength="24" required placeholder="e.g. Commercial Bank" class="w-full bg-canvas border border-borderDark rounded-xl px-3 py-2.5 text-xs font-bold text-white focus:outline-none focus:border-limeAccent">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2.5">
+                        <div>
+                            <label class="block text-[11px] text-mutedText mb-1">Subtitle / Label</label>
+                            <input type="text" id="acc-subtitle" maxlength="18" placeholder="Savings / Daily" class="w-full bg-canvas border border-borderDark rounded-xl px-3 py-2.5 text-xs font-bold text-white focus:outline-none focus:border-limeAccent">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-mutedText mb-1">4-Digit Label</label>
+                            <input type="text" id="acc-last4" maxlength="4" placeholder="4521" class="w-full bg-canvas border border-borderDark rounded-xl px-3 py-2.5 text-xs font-bold text-white focus:outline-none focus:border-limeAccent">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] text-mutedText mb-1">Opening Balance</label>
+                        <input type="number" step="0.01" id="acc-opening" required value="0" class="w-full bg-canvas border border-borderDark rounded-xl px-3 py-2.5 text-xs font-bold text-white focus:outline-none focus:border-limeAccent">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] text-mutedText mb-1.5">Card Color Theme</label>
+                        <div class="grid grid-cols-5 gap-2">
+                            <button type="button" onclick="selectAccTheme('lime')" data-theme="lime" class="acc-theme-btn h-8 rounded-xl theme-lime border-2 border-transparent"></button>
+                            <button type="button" onclick="selectAccTheme('lavender')" data-theme="lavender" class="acc-theme-btn h-8 rounded-xl theme-lavender border-2 border-transparent"></button>
+                            <button type="button" onclick="selectAccTheme('dark')" data-theme="dark" class="acc-theme-btn h-8 rounded-xl theme-dark border-2 border-transparent"></button>
+                            <button type="button" onclick="selectAccTheme('emerald')" data-theme="emerald" class="acc-theme-btn h-8 rounded-xl theme-emerald border-2 border-transparent"></button>
+                            <button type="button" onclick="selectAccTheme('coral')" data-theme="coral" class="acc-theme-btn h-8 rounded-xl theme-coral border-2 border-transparent"></button>
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full py-3 rounded-xl bg-limeAccent text-canvas text-xs font-extrabold mt-2 active:scale-[0.98] transition">
+                        Save Account
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- CATEGORY ADD / EDIT MODAL                                 -->
+        <!-- ========================================================= -->
+        <div id="category-modal" class="fixed inset-0 z-[55] hidden flex items-center justify-center p-4">
+            <div onclick="closeCategoryModal()" class="absolute inset-0 bg-black/75 backdrop-blur-sm"></div>
+            <div class="relative w-full max-w-[360px] bg-surface border border-borderDark rounded-3xl p-5 shadow-2xl">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 id="cat-modal-title" class="text-base font-extrabold text-white">Add Category</h3>
+                    <button onclick="closeCategoryModal()" class="w-7 h-7 rounded-full bg-canvas flex items-center justify-center text-zinc-400">
+                        <i class="fa-solid fa-xmark text-xs"></i>
+                    </button>
+                </div>
+                <form onsubmit="saveCategoryForm(event)" class="space-y-3">
+                    <input type="hidden" id="cat-edit-id">
+                    <div>
+                        <label class="block text-[11px] text-mutedText mb-1">Type</label>
+                        <select id="cat-type" onchange="toggleCategoryModalFields()" class="w-full bg-canvas border border-borderDark rounded-xl px-3 py-2.5 text-xs font-bold text-white focus:outline-none focus:border-limeAccent">
+                            <option value="Expense">Expense</option>
+                            <option value="Income">Income</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-4 gap-2.5">
+                        <div class="col-span-1">
+                            <label class="block text-[11px] text-mutedText mb-1">Emoji</label>
+                            <input type="text" id="cat-emoji" maxlength="4" required value="✨" class="w-full bg-canvas border border-borderDark rounded-xl px-2 py-2.5 text-center text-base focus:outline-none focus:border-limeAccent">
+                        </div>
+                        <div class="col-span-3">
+                            <label class="block text-[11px] text-mutedText mb-1">Category Name</label>
+                            <input type="text" id="cat-name" maxlength="24" required placeholder="e.g. Groceries" class="w-full bg-canvas border border-borderDark rounded-xl px-3 py-2.5 text-xs font-bold text-white focus:outline-none focus:border-limeAccent">
+                        </div>
+                    </div>
+                    <div id="cat-cap-wrap">
+                        <label class="block text-[11px] text-mutedText mb-1">Monthly Spending Cap</label>
+                        <input type="number" min="0" step="1" id="cat-cap" value="3000" class="w-full bg-canvas border border-borderDark rounded-xl px-3 py-2.5 text-xs font-bold text-white focus:outline-none focus:border-limeAccent">
+                    </div>
+                    <div id="cat-passive-wrap" class="hidden flex items-center justify-between bg-canvas border border-borderDark rounded-xl px-3.5 py-2.5">
+                        <div>
+                            <p class="text-xs font-bold text-white">Passive Income Stream</p>
+                            <p class="text-[10px] text-mutedText">Counts toward Freedom Index</p>
+                        </div>
+                        <input type="checkbox" id="cat-is-passive" class="w-5 h-5 accent-[#C6F432] cursor-pointer">
+                    </div>
+                    <button type="submit" class="w-full py-3 rounded-xl bg-limeAccent text-canvas text-xs font-extrabold mt-2 active:scale-[0.98] transition">
+                        Save Category
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- PROFILE SWITCHER / CREATE FRIEND PROFILE MODAL            -->
+        <!-- ========================================================= -->
+        <div id="profile-modal" class="fixed inset-0 z-[55] hidden flex items-center justify-center p-4">
+            <div onclick="closeProfileModal()" class="absolute inset-0 bg-black/75 backdrop-blur-sm"></div>
+            <div class="relative w-full max-w-[360px] bg-surface border border-borderDark rounded-3xl p-5 shadow-2xl">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-base font-extrabold text-white">Switch Profile</h3>
+                    <button onclick="closeProfileModal()" class="w-7 h-7 rounded-full bg-canvas flex items-center justify-center text-zinc-400">
+                        <i class="fa-solid fa-xmark text-xs"></i>
+                    </button>
+                </div>
+                <p class="text-[11px] text-mutedText mb-3">Each profile has completely separate accounts, categories, targets, and transactions.</p>
+                <div id="modal-profiles-list" class="space-y-2 mb-4 max-h-[220px] overflow-y-auto no-scrollbar"></div>
+                <button onclick="closeProfileModal(); openCreateProfileModal();" class="w-full py-3 rounded-xl bg-limeAccent text-canvas text-xs font-extrabold active:scale-[0.98] transition">
+                    + Add Friend / Test Profile
+                </button>
+            </div>
+        </div>
+
+        <div id="create-profile-modal" class="fixed inset-0 z-[58] hidden flex items-center justify-center p-4">
+            <div onclick="closeCreateProfileModal()" class="absolute inset-0 bg-black/75 backdrop-blur-sm"></div>
+            <div class="relative w-full max-w-[360px] bg-surface border border-borderDark rounded-3xl p-5 shadow-2xl">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-base font-extrabold text-white">Create New Profile</h3>
+                    <button onclick="closeCreateProfileModal()" class="w-7 h-7 rounded-full bg-canvas flex items-center justify-center text-zinc-400">
+                        <i class="fa-solid fa-xmark text-xs"></i>
+                    </button>
+                </div>
+                <form onsubmit="handleCreateProfile(event)" class="space-y-3">
+                    <div>
+                        <label class="block text-[11px] text-mutedText mb-1">Profile / Friend's Name</label>
+                        <input type="text" id="new-prof-name" maxlength="24" required placeholder="e.g. Kasun (Test)" class="w-full bg-canvas border border-borderDark rounded-xl px-3 py-2.5 text-xs font-bold text-white focus:outline-none focus:border-limeAccent">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] text-mutedText mb-1">Currency Code</label>
+                        <input type="text" id="new-prof-currency" maxlength="5" required value="LKR" class="w-full bg-canvas border border-borderDark rounded-xl px-3 py-2.5 text-xs font-bold text-white uppercase focus:outline-none focus:border-limeAccent">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] text-mutedText mb-1">Starting Setup</label>
+                        <select id="new-prof-template" class="w-full bg-canvas border border-borderDark rounded-xl px-3 py-2.5 text-xs font-bold text-white focus:outline-none focus:border-limeAccent">
+                            <option value="blank">Blank Slate (0 Balance — Clean Test)</option>
+                            <option value="sample">Pre-loaded Sample Data (Demo)</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="w-full py-3 rounded-xl bg-limeAccent text-canvas text-xs font-extrabold mt-1 active:scale-[0.98] transition">
+                        Create &amp; Switch
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- CUSTOM GENERIC CONFIRM / ALERT MODAL                      -->
+        <!-- ========================================================= -->
+        <div id="app-modal" class="fixed inset-0 z-[65] hidden flex items-center justify-center p-5">
+            <div onclick="closeModal()" class="absolute inset-0 bg-black/75 backdrop-blur-sm"></div>
+            <div class="relative w-full max-w-[340px] bg-surface border border-borderDark rounded-3xl p-6 shadow-2xl">
+                <h3 id="modal-title" class="text-base font-extrabold text-white mb-2">Notice</h3>
+                <p id="modal-body" class="text-xs text-zinc-300 leading-relaxed mb-5"></p>
+                <div id="modal-buttons" class="flex justify-end gap-2.5"></div>
+            </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- TOAST NOTIFICATION CONTAINER                              -->
+        <!-- ========================================================= -->
+        <div id="toast-box" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-[75] flex flex-col gap-2 items-center pointer-events-none w-[90%] max-w-[380px]"></div>
+
+    </div>
+
+    <script src="script.js?v=9"></script>
+    <script>
+    /* Warns if index.html and script.js are from different uploads (e.g. one file forgotten) */
+    (function () {
+        if (typeof APP_VERSION !== 'undefined' && APP_VERSION === '9') return;
+        var d = document.createElement('div');
+        d.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#FF5A5F;color:#fff;font:600 12px sans-serif;padding:10px 12px;text-align:center';
+        d.innerHTML = 'File versions do not match. Upload ALL files to GitHub, then <u id="mf-upd">tap here to update</u>.';
+        document.body.appendChild(d);
+        document.getElementById('mf-upd').onclick = function () {
+            var p = navigator.serviceWorker ? navigator.serviceWorker.getRegistrations() : Promise.resolve([]);
+            p.then(function (rs) { return Promise.all(rs.map(function (r) { return r.unregister(); })); })
+             .then(function () { return window.caches ? caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches.delete(k); })); }) : 0; })
+             .then(function () { location.replace(location.pathname + '?v=' + Date.now()); });
+        };
+    })();
+    </script>
+</body>
+</html>
