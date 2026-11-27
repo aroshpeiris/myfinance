@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>MyFinance — Personal Wealth &amp; Passive Income</title>
     <meta name="theme-color" content="#0F0F11">
     <link rel="manifest" href="manifest.json">
@@ -12,10 +12,10 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="MyFinance">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="preload" href="plus-jakarta-sans-latin-wght-normal.woff2?v=9" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="fa-solid-900.woff2?v=9" as="font" type="font/woff2" crossorigin>
-    <meta name="app-version" content="9">
-    <link rel="stylesheet" href="style.css?v=9">
+    <link rel="preload" href="plus-jakarta-sans-latin-wght-normal.woff2?v=11" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="fa-solid-900.woff2?v=11" as="font" type="font/woff2" crossorigin>
+    <meta name="app-version" content="11">
+    <link rel="stylesheet" href="style.css?v=11">
 </head>
 <body class="min-h-screen flex items-center justify-center sm:py-6 sm:px-4">
 
@@ -510,6 +510,22 @@
                     </button>
                 </div>
 
+                                <!-- 5a. Reminders -->
+                <div class="bg-surface rounded-3xl p-5 border border-borderDark space-y-3">
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                        <i class="fa-regular fa-bell text-limeAccent"></i> Daily Reminder
+                    </h3>
+                    <p class="text-[11px] text-mutedText">Get a notification at the time you choose, to add today's transactions.</p>
+                    <label class="rem-row"><span>Remind me every day</span><input type="checkbox" id="rem-enabled" onchange="toggleReminder(this.checked)"></label>
+                    <div id="rem-times"></div>
+                    <div class="flex gap-2">
+                        <button onclick="addReminderTime()" class="rem-btn">+ Add time</button>
+                        <button onclick="testReminder()" class="rem-btn">Send test</button>
+                    </div>
+                    <label class="rem-row"><span>Skip if I already added something today</span><input type="checkbox" id="rem-skip" onchange="setReminderSkip(this.checked)"></label>
+                    <p id="rem-status" class="text-[11px] text-mutedText"></p>
+                </div>
+
                 <!-- 5b. Google Sheet Auto-Sync -->
                 <div class="bg-surface rounded-3xl p-5 border border-borderDark space-y-3">
                     <h3 class="text-sm font-bold text-white flex items-center gap-2">
@@ -686,7 +702,8 @@
                     <!-- Note -->
                     <div>
                         <label class="block text-[11px] font-semibold text-mutedText mb-1">Note (Optional)</label>
-                        <input type="text" id="tx-note" maxlength="60" placeholder="e.g. Lunch, CEFT Transfer, Dividend" class="w-full bg-canvas border border-borderDark rounded-xl px-3.5 py-2.5 text-xs font-medium text-white focus:outline-none focus:border-limeAccent">
+                        <input type="text" id="tx-note" maxlength="60" autocomplete="off" oninput="renderNoteSuggestions()" onfocus="renderNoteSuggestions()" placeholder="e.g. Lunch, CEFT Transfer, Dividend" class="w-full bg-canvas border border-borderDark rounded-xl px-3.5 py-2.5 text-xs font-medium text-white focus:outline-none focus:border-limeAccent">
+                        <div id="note-suggest" class="note-suggest" hidden></div>
                     </div>
 
                     <button type="submit" id="tx-submit-btn" class="w-full py-3.5 rounded-2xl bg-limeAccent text-canvas text-sm font-extrabold shadow-[0_8px_22px_rgba(198,244,50,0.3)] hover:brightness-105 active:scale-[0.98] transition">
@@ -938,7 +955,7 @@
 
     </div>
 
-    <script src="script.js?v=9"></script>
+    <script src="script.js?v=11"></script>
     <script>
     /* Warns if index.html and script.js are from different uploads (e.g. one file forgotten) */
     (function () {
