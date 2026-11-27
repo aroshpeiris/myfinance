@@ -1,4 +1,4 @@
-const APP_VERSION = '9';
+const APP_VERSION = '11';
 /* =====================================================================
  * MULTI-PROFILE DATA ARCHITECTURE & PERSISTENCE
  * ===================================================================== */
@@ -183,8 +183,10 @@ function removeDemoData(root) {
 
 function saveRootState() {
     rootState.updatedAt = Date.now();
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(rootState));
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(rootState)); }
+    catch (err) { showToast('Could not save: device storage is full. Export a backup now.'); }
     if (typeof scheduleSync === 'function') scheduleSync();
+    if (typeof remPushToSW === 'function') remPushToSW();
 }
 
 function getActiveProfile() {
@@ -554,13 +556,13 @@ function renderHome(profile) {
                 <div class="flex items-center justify-between gap-2">
                     <div class="flex items-center gap-2 min-w-0">
                         <span class="w-7 h-3.5 rounded-sm ${chipBg} inline-block shrink-0"></span>
-                        <span class="text-xs font-extrabold truncate">${acc.name}</span>
+                        <span class="text-xs font-extrabold truncate">${escHtml(acc.name)}</span>
                     </div>
-                    <span class="text-[10px] font-bold ${mutedClass} shrink-0">${acc.subtitle || ''}</span>
+                    <span class="text-[10px] font-bold ${mutedClass} shrink-0">${escHtml(acc.subtitle || '')}</span>
                 </div>
 
                 <div class="text-xs font-bold tracking-[0.2em] opacity-85">
-                    •••• •••• •••• ${acc.last4 || '0000'}
+                    •••• •••• •••• ${escHtml(acc.last4 || '0000')}
                 </div>
 
                 <div class="flex items-end justify-between">
@@ -627,15 +629,15 @@ function renderHome(profile) {
             <div class="flex items-center justify-between py-2 border-b border-gray-100 last:border-0 gap-2">
                 <div class="flex items-center gap-3 min-w-0">
                     <div class="w-10 h-10 rounded-2xl bg-gray-100 flex items-center justify-center text-base shrink-0">
-                        ${cat.emoji || '📦'}
+                        ${escHtml(cat.emoji || '📦')}
                     </div>
                     <div class="min-w-0">
                         <div class="flex items-center gap-1.5">
-                            <p class="text-xs font-extrabold text-[#111827] truncate">${cat.name}</p>
+                            <p class="text-xs font-extrabold text-[#111827] truncate">${escHtml(cat.name)}</p>
                             ${cat.isPassive ? '<span class="px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700 text-[9px] font-bold">Passive</span>' : ''}
                             ${cat.isBankFee ? '<span class="px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 text-[9px] font-bold">Fee</span>' : ''}
                         </div>
-                        <p class="text-[11px] text-gray-500 truncate">${accName} • ${formatShortDate(tx.date)}${tx.note ? ' • ' + tx.note : ''}</p>
+                        <p class="text-[11px] text-gray-500 truncate">${escHtml(accName)} • ${formatShortDate(tx.date)}${tx.note ? ' • ' + escHtml(tx.note) : ''}</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2 shrink-0">
@@ -769,15 +771,15 @@ function renderAnalytics(profile) {
             <div class="bg-surface rounded-2xl p-3.5 border border-borderDark flex items-center justify-between gap-2">
                 <div class="flex items-center gap-3 min-w-0">
                     <div class="w-10 h-10 rounded-xl bg-canvas border border-borderDark flex items-center justify-center text-base shrink-0">
-                        ${cat.emoji || '📦'}
+                        ${escHtml(cat.emoji || '📦')}
                     </div>
                     <div class="min-w-0">
                         <div class="flex items-center gap-1.5">
-                            <p class="text-xs font-bold text-white truncate">${cat.name}</p>
+                            <p class="text-xs font-bold text-white truncate">${escHtml(cat.name)}</p>
                             ${cat.isPassive ? '<span class="px-1.5 py-0.5 rounded bg-lavenderAccent/20 text-lavenderAccent text-[9px] font-bold">Passive</span>' : ''}
                             ${cat.isBankFee ? '<span class="px-1.5 py-0.5 rounded bg-dangerRed/20 text-dangerRed text-[9px] font-bold">Bank Fee</span>' : ''}
                         </div>
-                        <p class="text-[11px] text-mutedText truncate">${accName} • ${formatShortDate(tx.date)}${tx.note ? ' • ' + tx.note : ''}</p>
+                        <p class="text-[11px] text-mutedText truncate">${escHtml(accName)} • ${formatShortDate(tx.date)}${tx.note ? ' • ' + escHtml(tx.note) : ''}</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2 shrink-0">
@@ -948,7 +950,7 @@ function renderTargets(profile) {
             <div>
                 <div class="flex items-center justify-between text-xs mb-1.5">
                     <span class="font-bold text-zinc-200 flex items-center gap-2">
-                        <span>${cat.emoji}</span> ${cat.name}
+                        <span>${escHtml(cat.emoji)}</span> ${escHtml(cat.name)}
                     </span>
                     <span class="font-bold ${isOver ? 'text-dangerRed' : 'text-zinc-300'}">
                         ${formatMoney(spent, 0)} <span class="text-mutedText font-normal">/ ${formatMoney(cap, 0)}</span>
@@ -984,7 +986,7 @@ function renderCustomize(profile) {
                         ${(p.name || 'P').charAt(0).toUpperCase()}
                     </span>
                     <div class="min-w-0">
-                        <p class="text-xs font-bold text-white truncate">${p.name} ${isAct ? '<span class="text-limeAccent text-[10px]">(Active)</span>' : ''}</p>
+                        <p class="text-xs font-bold text-white truncate">${escHtml(p.name)} ${isAct ? '<span class="text-limeAccent text-[10px]">(Active)</span>' : ''}</p>
                         <p class="text-[10px] text-mutedText">${p.currency} • ${p.transactions.length} txns</p>
                     </div>
                 </div>
@@ -1004,7 +1006,7 @@ function renderCustomize(profile) {
                 <div class="flex items-center gap-3 min-w-0">
                     <span class="w-8 h-6 rounded-md theme-${acc.theme || 'dark'} shrink-0"></span>
                     <div class="min-w-0">
-                        <p class="text-xs font-bold text-white truncate">${acc.name} <span class="text-mutedText font-normal">••${acc.last4 || '0000'}</span></p>
+                        <p class="text-xs font-bold text-white truncate">${escHtml(acc.name)} <span class="text-mutedText font-normal">••${escHtml(acc.last4 || '0000')}</span></p>
                         <p class="text-[10px] text-mutedText">Bal: ${formatMoney(bal, 0)}</p>
                     </div>
                 </div>
@@ -1030,9 +1032,9 @@ function renderCustomize(profile) {
     document.getElementById('customize-categories-list').innerHTML = cats.map(c => `
         <div class="flex items-center justify-between p-2.5 rounded-xl bg-canvas border border-borderDark">
             <div class="flex items-center gap-2.5 min-w-0">
-                <span class="text-base">${c.emoji}</span>
+                <span class="text-base">${escHtml(c.emoji)}</span>
                 <div class="min-w-0">
-                    <p class="text-xs font-bold text-white truncate">${c.name}</p>
+                    <p class="text-xs font-bold text-white truncate">${escHtml(c.name)}</p>
                     <p class="text-[10px] text-mutedText">
                         ${c.type === 'Expense' ? `Cap: ${formatMoney(c.cap || 0, 0)}` : (c.isPassive ? 'Passive Income Stream' : 'Active Income')}
                     </p>
@@ -1077,7 +1079,7 @@ function openAddDrawer(initialType = 'Expense') {
     document.getElementById('tx-amount-label').textContent = `Amount (${cur})`;
     document.getElementById('tx-fee-label').textContent = `Bank / Transfer Fee (${cur}, Optional)`;
 
-    const accOptions = profile.accounts.map(a => `<option value="${a.id}">${a.name} (${formatMoney(getAccountBalance(profile, a.id), 0)})</option>`).join('');
+    const accOptions = profile.accounts.map(a => `<option value="${a.id}">${escHtml(a.name)} (${formatMoney(getAccountBalance(profile, a.id), 0)})</option>`).join('');
     document.getElementById('tx-account').innerHTML = accOptions;
     document.getElementById('tx-to-account').innerHTML = accOptions;
     if (profile.accounts.length > 1) {
@@ -1090,6 +1092,7 @@ function openAddDrawer(initialType = 'Expense') {
     document.getElementById('tx-amount').value = '';
     document.getElementById('tx-fee').value = '0';
     document.getElementById('tx-note').value = '';
+    hideNoteSuggestions();
 
     setDrawerType(initialType);
 
@@ -1128,6 +1131,7 @@ function closeAddDrawer() {
 
 function setDrawerType(type) {
     drawerType = type;
+    hideNoteSuggestions();
     ['Expense', 'Income', 'Transfer'].forEach(t => {
         const btn = document.getElementById(`dtype-${t}`);
         btn.className = t === type
@@ -1151,7 +1155,7 @@ function setDrawerType(type) {
         accLabel.textContent = 'Account';
         const cats = profile.categories.filter(c => c.type === type);
         document.getElementById('tx-category').innerHTML = cats.map(c =>
-            `<option value="${c.id}">${c.emoji} ${c.name}${c.isPassive ? ' (Passive)' : ''}</option>`
+            `<option value="${c.id}">${escHtml(c.emoji)} ${escHtml(c.name)}${c.isPassive ? ' (Passive)' : ''}</option>`
         ).join('');
     }
 }
@@ -1184,7 +1188,7 @@ function updateTransferPreview() {
 function handleSaveTransaction(e) {
     e.preventDefault();
     const profile = getActiveProfile();
-    const amount = parseFloat(document.getElementById('tx-amount').value);
+    const amount = Math.round(parseFloat(document.getElementById('tx-amount').value) * 100) / 100;
     const accountId = document.getElementById('tx-account').value;
     const date = document.getElementById('tx-date').value;
     const note = document.getElementById('tx-note').value.trim();
@@ -1263,7 +1267,7 @@ function handleSaveTransaction(e) {
 }
 
 function confirmDeleteTx(txId) {
-    openModal('Delete Transaction?', 'This will permanently remove the entry and recalculate account balances.', [
+    openModal('Delete Transaction?', 'This permanently removes the entry (for a transfer, both sides and any fee) and recalculates balances.', [
         { label: 'Cancel', style: 'bg-canvas border border-borderDark text-zinc-200', onClick: closeModal },
         {
             label: 'Delete',
@@ -1271,7 +1275,10 @@ function confirmDeleteTx(txId) {
             onClick: () => {
                 const p = getActiveProfile();
                 rootState.deletedTxIds = [...(rootState.deletedTxIds || []), txId];
-                p.transactions = p.transactions.filter(t => t.id !== txId);
+                const m = /^(tx-\d+)-(out|in|fee)$/.exec(txId);
+                const gone = m ? p.transactions.filter(t => t.id.startsWith(m[1] + '-')).map(t => t.id) : [txId];
+                rootState.deletedTxIds = [...new Set([...(rootState.deletedTxIds || []), ...gone])];
+                p.transactions = p.transactions.filter(t => !gone.includes(t.id));
                 saveRootState();
                 closeModal();
                 renderAll();
@@ -1295,12 +1302,12 @@ function openTargetsDrawer() {
     document.getElementById('t-goal-amount').value = t.customGoalAmount || 10000;
 
     const accSel = document.getElementById('t-goal-account');
-    accSel.innerHTML = p.accounts.map(a => `<option value="${a.id}" ${a.id === t.customGoalAccountId ? 'selected' : ''}>${a.name}</option>`).join('');
+    accSel.innerHTML = p.accounts.map(a => `<option value="${a.id}" ${a.id === t.customGoalAccountId ? 'selected' : ''}>${escHtml(a.name)}</option>`).join('');
 
     const expCats = p.categories.filter(c => c.type === 'Expense');
     document.getElementById('t-category-caps-grid').innerHTML = expCats.map(c => `
         <div>
-            <label class="block text-[10px] text-mutedText mb-1 truncate">${c.emoji} ${c.name}</label>
+            <label class="block text-[10px] text-mutedText mb-1 truncate">${escHtml(c.emoji)} ${escHtml(c.name)}</label>
             <input type="number" min="0" step="1" data-cat-id="${c.id}" oninput="updateTargetsCapSum()" value="${c.cap || 0}" class="t-cat-cap w-full bg-surface border border-borderDark rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-limeAccent">
         </div>
     `).join('');
@@ -1520,7 +1527,7 @@ function openProfileModal() {
                         ${(p.name || 'P').charAt(0).toUpperCase()}
                     </span>
                     <div class="min-w-0">
-                        <p class="text-xs font-bold text-white truncate">${p.name}</p>
+                        <p class="text-xs font-bold text-white truncate">${escHtml(p.name)}</p>
                         <p class="text-[10px] text-mutedText">${p.currency} • ${p.accounts.length} cards • ${p.transactions.length} txns</p>
                     </div>
                 </div>
@@ -1607,8 +1614,8 @@ function exportCSV() {
     p.transactions.forEach(tx => {
         const acc = getAccountNameById(p, tx.accountId);
         const cat = getCategoryById(p, tx.categoryId).name;
-        const safeNote = (tx.note || '').replace(/"/g, '""');
-        csv += `"${tx.date}","${acc}","${cat}","${safeNote}","${tx.amount}","${tx.type}"\n`;
+        const q = v => { v = String(v ?? ''); if (/^[=+\-@]/.test(v)) v = "'" + v; return '"' + v.replace(/"/g, '""') + '"'; };
+        csv += [tx.date, acc, cat, tx.note, tx.amount, tx.type].map(q).join(',') + '\n';
     });
     downloadFile(csv, `MyFinance_${p.name.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.csv`, 'text/csv;charset=utf-8;');
     showToast('Excel CSV downloaded!');
@@ -1669,7 +1676,7 @@ function handleCSVImport(e) {
             }
             saveRootState();
             renderAll();
-            showToast(`Imported ${count} rows into ${p.name}!`);
+            showToast(`Imported ${count} rows into ${escHtml(p.name)}!`);
         } catch (err) {
             openModal('Import Error', err.message, [{ label: 'OK', style: 'bg-limeAccent text-canvas', onClick: closeModal }]);
         } finally {
@@ -1695,10 +1702,12 @@ function handleJSONRestore(e) {
                 throw new Error('Invalid MyFinance backup file.');
             }
             normalizeAllDates(parsed);
-            rootState = parsed;
-            saveRootState();
-            renderAll();
-            showToast('All profiles restored!');
+            openModal('Replace all data?', 'Restoring this backup replaces every profile on this device. Export a backup first if you are unsure.', [
+                { label: 'Cancel', style: 'bg-canvas border border-borderDark text-zinc-200', onClick: closeModal },
+                { label: 'Restore', style: 'bg-dangerRed text-white', onClick: () => {
+                    rootState = parsed; saveRootState(); closeModal(); renderAll(); showToast('All profiles restored!');
+                } }
+            ]);
         } catch (err) {
             openModal('Restore Error', err.message, [{ label: 'OK', style: 'bg-limeAccent text-canvas', onClick: closeModal }]);
         } finally {
@@ -1710,7 +1719,7 @@ function handleJSONRestore(e) {
 
 function confirmResetCurrentProfile() {
     const p = getActiveProfile();
-    openModal(`Reset "${p.name}"?`, 'Clear all transactions in this profile and reset opening balances to 0?', [
+    openModal(`Reset "${escHtml(p.name)}"?`, 'Clear all transactions in this profile and reset opening balances to 0?', [
         { label: 'Cancel', style: 'bg-canvas border border-borderDark text-zinc-200', onClick: closeModal },
         {
             label: 'Reset Profile',
@@ -1722,7 +1731,7 @@ function confirmResetCurrentProfile() {
                 saveRootState();
                 closeModal();
                 renderAll();
-                showToast(`"${p.name}" has been reset.`);
+                showToast(`"${escHtml(p.name)}" has been reset.`);
             }
         }
     ]);
@@ -1753,11 +1762,11 @@ function shareMonthlyReport() {
     const pct = Math.round((st.outcome / cap) * 100);
     const top = Object.entries(st.byCategory).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([id, amt], i) => {
         const c = getCategoryById(p, id);
-        return `${i + 1}. ${c.emoji || ''} ${c.name}: ${formatMoney(amt, 0)}`;
+        return `${i + 1}. ${c.emoji || ''} ${escHtml(c.name)}: ${formatMoney(amt, 0)}`;
     });
     const lines = [
         `📊 *MyFinance Report* — ${m.label} ${m.year}`,
-        `👤 ${p.name}`,
+        `👤 ${escHtml(p.name)}`,
         '',
         `💰 Income: ${formatMoney(st.income, 0)}`,
         `💸 Outcome: ${formatMoney(st.outcome, 0)}`,
@@ -1775,7 +1784,7 @@ function openBudgetAlertModal() {
     const mStats = getMonthStats(p, getCurrentMonthPrefix());
     const cap = Math.max(Number(p.targets.monthlyBudgetCap) || 1, 1);
     const pct = Math.round((mStats.outcome / cap) * 100);
-    const msg = `Profile "${p.name}": You have spent ${formatMoney(mStats.outcome, 0)} (${pct}%) of your ${formatMoney(cap, 0)} monthly cap. Total Bank Fees this month: ${formatMoney(mStats.bankFees, 0)}. Passive income earned: ${formatMoney(mStats.passive, 0)}.`;
+    const msg = `Profile "${escHtml(p.name)}": You have spent ${formatMoney(mStats.outcome, 0)} (${pct}%) of your ${formatMoney(cap, 0)} monthly cap. Total Bank Fees this month: ${formatMoney(mStats.bankFees, 0)}. Passive income earned: ${formatMoney(mStats.passive, 0)}.`;
     openModal('Monthly Financial Pulse', msg, [
         { label: 'View Targets', style: 'bg-canvas border border-borderDark text-white', onClick: () => { closeModal(); switchScreen('targets'); } },
         { label: 'Got it', style: 'bg-limeAccent text-canvas', onClick: closeModal }
@@ -1973,9 +1982,166 @@ if ('serviceWorker' in navigator) {
     });
 }
 
+
+/* =====================================================================
+ * NOTE SUGGESTIONS — type a few letters, tap a past note to refill
+ * its category (icon) and amount. Works per transaction type.
+ * ===================================================================== */
+function hideNoteSuggestions() {
+    const box = document.getElementById('note-suggest');
+    if (box) { box.hidden = true; box.innerHTML = ''; }
+}
+
+function getNoteSuggestions(profile, type, query) {
+    const q = (query || '').trim().toLowerCase();
+    const seen = new Map();
+    [...profile.transactions].sort((a, b) => String(b.date).localeCompare(String(a.date))).forEach(t => {
+        if (t.type !== type || !t.note) return;
+        const key = t.note.trim().toLowerCase();
+        if (!key) return;
+        const e = seen.get(key);
+        if (e) e.count++;
+        else seen.set(key, { note: t.note.trim(), categoryId: t.categoryId, amount: t.amount, count: 1 });
+    });
+    return [...seen.values()]
+        .filter(e => !q || e.note.toLowerCase().includes(q))
+        .filter(e => e.note.toLowerCase() !== q)
+        .sort((a, b) => (b.note.toLowerCase().startsWith(q) - a.note.toLowerCase().startsWith(q)) || b.count - a.count)
+        .slice(0, 5);
+}
+
+function renderNoteSuggestions() {
+    const box = document.getElementById('note-suggest');
+    if (!box) return;
+    if (drawerType === 'Transfer') { hideNoteSuggestions(); return; }
+    const profile = getActiveProfile();
+    const list = getNoteSuggestions(profile, drawerType, document.getElementById('tx-note').value);
+    if (!list.length) { hideNoteSuggestions(); return; }
+    box.innerHTML = list.map((e, i) => {
+        const cat = getCategoryById(profile, e.categoryId);
+        return `<button type="button" class="note-sug-item" data-i="${i}">
+            <span class="note-sug-emoji">${escHtml(cat.emoji || '📦')}</span>
+            <span class="note-sug-text"><b>${escHtml(e.note)}</b><small>${escHtml(cat.name)}</small></span>
+            <span class="note-sug-amt">${escHtml(formatMoney(e.amount, 0))}</span>
+        </button>`;
+    }).join('');
+    box.hidden = false;
+    box.onpointerdown = ev => ev.preventDefault();          // keep focus so the list does not vanish before the tap
+    box.onclick = ev => {
+        const btn = ev.target.closest('.note-sug-item');
+        if (!btn) return;
+        const e = list[+btn.dataset.i];
+        document.getElementById('tx-note').value = e.note;
+        const sel = document.getElementById('tx-category');
+        if ([...sel.options].some(o => o.value === e.categoryId)) sel.value = e.categoryId;
+        const amt = document.getElementById('tx-amount');
+        if (!amt.value) amt.value = e.amount;
+        hideNoteSuggestions();
+    };
+}
+document.addEventListener('click', ev => { if (!ev.target.closest('#tx-note, #note-suggest')) hideNoteSuggestions(); });
+
+
+/* =====================================================================
+ * DAILY REMINDERS (per device). Fires while the app is open, when it is
+ * reopened, and — on Android Chrome installed apps — via periodic
+ * background sync. Exact-time delivery with the app fully closed needs a
+ * push server, which this app does not have.
+ * ===================================================================== */
+const REM_KEY = 'myfinance_reminders';
+function remCfg() {
+    try { return { enabled: false, times: ['20:00'], skip: true, fired: {}, ...JSON.parse(localStorage.getItem(REM_KEY) || '{}') }; }
+    catch (e) { return { enabled: false, times: ['20:00'], skip: true, fired: {} }; }
+}
+function remSave(c) {
+    try { localStorage.setItem(REM_KEY, JSON.stringify(c)); } catch (e) {}
+    remPushToSW(c);
+    renderReminderSettings();
+}
+function todayStr() { const d = new Date(); return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; }
+function hasEntryToday() { return getActiveProfile().transactions.some(t => (t.date || '').startsWith(todayStr())); }
+
+async function remPushToSW(c = remCfg()) {
+    try {
+        const cache = await caches.open('myfinance-settings');
+        await cache.put('reminder-config', new Response(JSON.stringify({ ...c, entryDay: hasEntryToday() ? todayStr() : '' })));
+    } catch (e) {}
+}
+
+async function remNotify(title, body) {
+    try {
+        const reg = await navigator.serviceWorker.getRegistration();
+        if (reg) { await reg.showNotification(title, { body, icon: 'icon-192.png', badge: 'icon-192.png', tag: 'myfinance-reminder', data: { url: './index.html' } }); return true; }
+    } catch (e) {}
+    try { new Notification(title, { body, icon: 'icon-192.png' }); return true; } catch (e) { return false; }
+}
+
+function renderReminderSettings() {
+    const c = remCfg();
+    const on = document.getElementById('rem-enabled'); if (!on) return;
+    on.checked = c.enabled;
+    document.getElementById('rem-skip').checked = c.skip;
+    document.getElementById('rem-times').innerHTML = c.times.map((t, i) => `
+        <div class="rem-row"><input type="time" value="${t}" onchange="setReminderTime(${i}, this.value)">
+        ${c.times.length > 1 ? `<button onclick="removeReminderTime(${i})" aria-label="Remove time" class="rem-x"><i class="fa-solid fa-xmark"></i></button>` : ''}</div>`).join('');
+    const st = document.getElementById('rem-status');
+    if (!('Notification' in window)) st.textContent = 'This browser does not support notifications.';
+    else if (Notification.permission === 'denied') st.textContent = 'Notifications are blocked. Allow them in your phone or browser settings for this app.';
+    else st.textContent = c.enabled ? 'On. Keep the app installed on your home screen for best results.' : 'Off.';
+}
+
+async function toggleReminder(on) {
+    const c = remCfg();
+    if (on) {
+        if (!('Notification' in window)) { showToast('Notifications are not supported here.'); c.enabled = false; return remSave(c); }
+        const perm = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission();
+        if (perm !== 'granted') { c.enabled = false; remSave(c); showToast('Notification permission was not allowed.'); return; }
+        try {
+            const reg = await navigator.serviceWorker.ready;
+            if (reg.periodicSync) await reg.periodicSync.register('myfinance-reminder', { minInterval: 15 * 60 * 1000 });
+        } catch (e) {}
+    }
+    c.enabled = on; remSave(c);
+    showToast(on ? 'Reminder turned on.' : 'Reminder turned off.');
+}
+function setReminderSkip(v) { const c = remCfg(); c.skip = v; remSave(c); }
+function setReminderTime(i, v) { if (!v) return; const c = remCfg(); c.times[i] = v; c.fired = {}; remSave(c); }
+function addReminderTime() { const c = remCfg(); if (c.times.length >= 4) return showToast('Up to 4 reminder times.'); c.times.push('12:00'); remSave(c); }
+function removeReminderTime(i) { const c = remCfg(); c.times.splice(i, 1); remSave(c); }
+async function testReminder() {
+    if (!('Notification' in window)) return showToast('Notifications are not supported here.');
+    const perm = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission();
+    if (perm !== 'granted') return showToast('Notification permission was not allowed.');
+    remNotify('MyFinance', 'This is a test reminder. It works!');
+}
+
+function checkReminders() {
+    const c = remCfg();
+    if (!c.enabled || !('Notification' in window) || Notification.permission !== 'granted') return;
+    const now = new Date(), day = todayStr(), hhmm = `${pad2(now.getHours())}:${pad2(now.getMinutes())}`;
+    let changed = false;
+    c.times.forEach(t => {
+        if (t > hhmm || c.fired[t] === day) return;
+        c.fired[t] = day; changed = true;
+        if (c.skip && hasEntryToday()) return;
+        remNotify('MyFinance reminder', "Don't forget to add today's income and expenses.");
+    });
+    if (changed) { try { localStorage.setItem(REM_KEY, JSON.stringify(c)); } catch (e) {} }
+    remPushToSW(c);
+}
+setInterval(checkReminders, 30000);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkReminders(); });
+
+document.addEventListener('keydown', ev => {
+    if (ev.key !== 'Escape') return;
+    ['app-modal'].forEach(id => { const el = document.getElementById(id); if (el && !el.classList.contains('hidden')) closeModal(); });
+    const d = document.getElementById('add-drawer'); if (d && !d.classList.contains('hidden')) closeAddDrawer();
+});
+
 // Boot App — runs as soon as the page is parsed (does not wait for fonts/images)
 (function bootApp() {
     renderAll();
+    renderReminderSettings(); checkReminders();
     const u = document.getElementById('sync-url-input');
     if (u) u.value = getSyncUrl();
     setTimeout(() => syncNow(false), 1200);   // pull from the Sheet after the screen is already visible
