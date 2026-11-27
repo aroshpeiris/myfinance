@@ -959,7 +959,8 @@
     <script>
     /* Warns if index.html and script.js are from different uploads (e.g. one file forgotten) */
     (function () {
-        if (typeof APP_VERSION !== 'undefined' && APP_VERSION === '9') return;
+        var m = document.querySelector('meta[name="app-version"]');
+        if (typeof APP_VERSION !== 'undefined' && m && APP_VERSION === m.content) return;
         var d = document.createElement('div');
         d.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#FF5A5F;color:#fff;font:600 12px sans-serif;padding:10px 12px;text-align:center';
         d.innerHTML = 'File versions do not match. Upload ALL files to GitHub, then <u id="mf-upd">tap here to update</u>.';
