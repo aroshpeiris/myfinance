@@ -1,4 +1,4 @@
-const CACHE = 'myfinance-v11';
+const CACHE = 'myfinance-v13';
 const CORE = ['./', './index.html', './style.css', './script.js', './manifest.json', './icon-192.png', './icon-512.png', './plus-jakarta-sans-latin-wght-normal.woff2', './fa-solid-900.woff2', './fa-regular-400.woff2', './fa-brands-400.woff2'];
 self.addEventListener('install', e => {
   // Cache every app file up-front so the app opens instantly, even with no internet.
