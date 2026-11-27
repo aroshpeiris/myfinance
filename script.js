@@ -1,4 +1,4 @@
-const APP_VERSION = '11';
+const APP_VERSION = '13';
 /* =====================================================================
  * MULTI-PROFILE DATA ARCHITECTURE & PERSISTENCE
  * ===================================================================== */
@@ -342,6 +342,15 @@ let historyDay = null;       // 'YYYY-MM-DD' selected day (or null = whole month
 let historyFilter = 'All';
 let historySearch = '';
 
+
+/* Category icon: an emoji, or a small uploaded image stored as a data URL */
+function isImgIcon(v) { return typeof v === 'string' && /^data:image\/(png|jpe?g|webp|gif);base64,/.test(v); }
+function catIcon(cat) {
+    const v = (cat && cat.emoji) || '📦';
+    return isImgIcon(v) ? `<img class="cat-img" alt="" src="${v}">` : escHtml(v);
+}
+function catIconText(cat) { const v = (cat && cat.emoji) || ''; return isImgIcon(v) ? '🖼️' : v; }
+
 function escHtml(v) {
     return String(v === undefined || v === null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
@@ -474,7 +483,7 @@ function renderHistory(profile) {
         return `
             <div class="bg-surface rounded-2xl p-3.5 border border-borderDark flex items-center justify-between gap-2">
                 <div class="flex items-center gap-3 min-w-0">
-                    <div class="w-10 h-10 rounded-xl bg-canvas border border-borderDark flex items-center justify-center text-base shrink-0">${escHtml(cat.emoji || '📦')}</div>
+                    <div class="w-10 h-10 rounded-xl bg-canvas border border-borderDark flex items-center justify-center text-base shrink-0">${catIcon(cat)}</div>
                     <div class="min-w-0">
                         <p class="text-xs font-bold text-white truncate">${escHtml(cat.name)}</p>
                         <p class="text-[11px] text-mutedText truncate">${escHtml(accName)} • ${escHtml(when)}${tx.note ? ' • ' + escHtml(tx.note) : ''}</p>
@@ -629,7 +638,7 @@ function renderHome(profile) {
             <div class="flex items-center justify-between py-2 border-b border-gray-100 last:border-0 gap-2">
                 <div class="flex items-center gap-3 min-w-0">
                     <div class="w-10 h-10 rounded-2xl bg-gray-100 flex items-center justify-center text-base shrink-0">
-                        ${escHtml(cat.emoji || '📦')}
+                        ${catIcon(cat)}
                     </div>
                     <div class="min-w-0">
                         <div class="flex items-center gap-1.5">
@@ -687,6 +696,29 @@ function initChartScrub() {
     window.addEventListener('pointerup', () => { down = false; });
 }
 
+
+function renderBreakdown(profile, mStats) {
+    const body = document.getElementById('breakdown-body');
+    if (!body) return;
+    const [yy, mm] = getCurrentMonthPrefix().split('-').map(Number);
+    document.getElementById('breakdown-month').textContent = new Date(yy, mm - 1, 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+    const colors = ['#C6F432', '#C5B4FF', '#FBBF24', '#FF4D4F', '#60A5FA'];
+    const rows = Object.entries(mStats.byCategory).map(([id, amt]) => ({ cat: getCategoryById(profile, id), amt })).sort((a, b) => b.amt - a.amt);
+    if (!rows.length || mStats.outcome <= 0) {
+        body.innerHTML = '<p class="text-xs text-mutedText font-semibold py-4 text-center">No expenses yet this month.</p>';
+        return;
+    }
+    const top = rows.slice(0, 4), rest = rows.slice(4).reduce((a, r) => a + r.amt, 0);
+    const items = top.map((r, i) => ({ name: r.cat.name, amt: r.amt, color: colors[i] }));
+    if (rest > 0) items.push({ name: 'Other', amt: rest, color: colors[4] });
+    let acc = 0;
+    const stops = items.map(it => { const a = acc / mStats.outcome * 100; acc += it.amt; return `${it.color} ${a}% ${acc / mStats.outcome * 100}%`; }).join(',');
+    const legend = items.map(it => `<div style="display:flex;align-items:center;gap:10px;font-size:12px;font-weight:700"><span style="width:10px;height:10px;border-radius:3px;background:${it.color};flex:none"></span><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(it.name)}</span><span style="color:#9A9AA5">${Math.round(it.amt / mStats.outcome * 100)}%</span></div>`).join('');
+    const max = Math.max(mStats.income, mStats.outcome, 1);
+    const bar = (label, v, c) => `<div style="margin-top:12px"><div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700"><span>${label}</span><span style="color:#9A9AA5">${escHtml(formatMoney(v, 0))}</span></div><div style="height:8px;border-radius:4px;background:#2A2A31;margin-top:6px;overflow:hidden"><div style="width:${v / max * 100}%;height:100%;background:${c}"></div></div></div>`;
+    body.innerHTML = `<div style="display:flex;align-items:center;gap:16px"><div style="flex:none;width:112px;height:112px;border-radius:50%;background:conic-gradient(${stops});display:flex;align-items:center;justify-content:center"><div style="width:70px;height:70px;border-radius:50%;background:#1A1A1F;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font-size:9px;color:#9A9AA5;font-weight:700">Spent</span><span style="font-size:12px;font-weight:800">${escHtml(formatMoney(mStats.outcome, 0))}</span></div></div><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:8px">${legend}</div></div>${bar('Income', mStats.income, '#4ADE80')}${bar('Expense', mStats.outcome, '#FF4D4F')}`;
+}
+
 function renderAnalytics(profile) {
     const pills = ['All', 'Income', 'Outcome', 'Passive', 'Bank Fees'];
     pills.forEach(p => {
@@ -726,6 +758,8 @@ function renderAnalytics(profile) {
     document.getElementById('kpi-outcome').textContent = formatMoney(mStats.outcome, 0);
     document.getElementById('kpi-savings').textContent = formatMoney(mStats.net, 0);
     document.getElementById('kpi-bank-fees').textContent = formatMoney(mStats.bankFees, 0);
+
+    renderBreakdown(profile, mStats);
 
     // Insight Banner
     const cap = Math.max(Number(profile.targets.monthlyBudgetCap) || 1, 1);
@@ -771,7 +805,7 @@ function renderAnalytics(profile) {
             <div class="bg-surface rounded-2xl p-3.5 border border-borderDark flex items-center justify-between gap-2">
                 <div class="flex items-center gap-3 min-w-0">
                     <div class="w-10 h-10 rounded-xl bg-canvas border border-borderDark flex items-center justify-center text-base shrink-0">
-                        ${escHtml(cat.emoji || '📦')}
+                        ${catIcon(cat)}
                     </div>
                     <div class="min-w-0">
                         <div class="flex items-center gap-1.5">
@@ -950,7 +984,7 @@ function renderTargets(profile) {
             <div>
                 <div class="flex items-center justify-between text-xs mb-1.5">
                     <span class="font-bold text-zinc-200 flex items-center gap-2">
-                        <span>${escHtml(cat.emoji)}</span> ${escHtml(cat.name)}
+                        <span>${catIcon(cat)}</span> ${escHtml(cat.name)}
                     </span>
                     <span class="font-bold ${isOver ? 'text-dangerRed' : 'text-zinc-300'}">
                         ${formatMoney(spent, 0)} <span class="text-mutedText font-normal">/ ${formatMoney(cap, 0)}</span>
@@ -1032,7 +1066,7 @@ function renderCustomize(profile) {
     document.getElementById('customize-categories-list').innerHTML = cats.map(c => `
         <div class="flex items-center justify-between p-2.5 rounded-xl bg-canvas border border-borderDark">
             <div class="flex items-center gap-2.5 min-w-0">
-                <span class="text-base">${escHtml(c.emoji)}</span>
+                <span class="text-base">${catIcon(c)}</span>
                 <div class="min-w-0">
                     <p class="text-xs font-bold text-white truncate">${escHtml(c.name)}</p>
                     <p class="text-[10px] text-mutedText">
@@ -1155,7 +1189,7 @@ function setDrawerType(type) {
         accLabel.textContent = 'Account';
         const cats = profile.categories.filter(c => c.type === type);
         document.getElementById('tx-category').innerHTML = cats.map(c =>
-            `<option value="${c.id}">${escHtml(c.emoji)} ${escHtml(c.name)}${c.isPassive ? ' (Passive)' : ''}</option>`
+            `<option value="${c.id}">${escHtml(catIconText(c))} ${escHtml(c.name)}${c.isPassive ? ' (Passive)' : ''}</option>`
         ).join('');
     }
 }
@@ -1307,7 +1341,7 @@ function openTargetsDrawer() {
     const expCats = p.categories.filter(c => c.type === 'Expense');
     document.getElementById('t-category-caps-grid').innerHTML = expCats.map(c => `
         <div>
-            <label class="block text-[10px] text-mutedText mb-1 truncate">${escHtml(c.emoji)} ${escHtml(c.name)}</label>
+            <label class="block text-[10px] text-mutedText mb-1 truncate">${catIcon(c)} ${escHtml(c.name)}</label>
             <input type="number" min="0" step="1" data-cat-id="${c.id}" oninput="updateTargetsCapSum()" value="${c.cap || 0}" class="t-cat-cap w-full bg-surface border border-borderDark rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-limeAccent">
         </div>
     `).join('');
@@ -1449,12 +1483,45 @@ function openCategoryModal(editId = null) {
     document.getElementById('cat-modal-title').textContent = existing ? 'Edit Category' : 'Add Category';
     document.getElementById('cat-edit-id').value = existing ? existing.id : '';
     document.getElementById('cat-type').value = existing ? existing.type : customizeCatTab;
-    document.getElementById('cat-emoji').value = existing ? existing.emoji : '✨';
+    const ex = existing ? existing.emoji : '✨';
+    document.getElementById('cat-image').value = isImgIcon(ex) ? ex : '';
+    document.getElementById('cat-emoji').value = isImgIcon(ex) ? '✨' : ex;
+    updateCatImagePreview();
     document.getElementById('cat-name').value = existing ? existing.name : '';
     document.getElementById('cat-cap').value = existing ? (existing.cap || 0) : 3000;
     document.getElementById('cat-is-passive').checked = existing ? !!existing.isPassive : false;
     toggleCategoryModalFields();
     document.getElementById('category-modal').classList.remove('hidden');
+}
+
+function updateCatImagePreview() {
+    const img = document.getElementById('cat-image').value;
+    const box = document.getElementById('cat-img-preview');
+    box.innerHTML = img ? `<img class="cat-img" alt="" src="${img}">` : '<i class="fa-regular fa-image"></i>';
+    document.getElementById('cat-img-remove').hidden = !img;
+}
+function removeCatImage() { document.getElementById('cat-image').value = ''; updateCatImagePreview(); }
+function pickCatImage(input) {
+    const file = input.files && input.files[0];
+    input.value = '';
+    if (!file) return;
+    if (!/^image\//.test(file.type)) { showToast('Please choose an image file.'); return; }
+    const url = URL.createObjectURL(file);
+    const im = new Image();
+    im.onload = () => {
+        const N = 96, cv = document.createElement('canvas');
+        cv.width = cv.height = N;
+        const ctx = cv.getContext('2d');
+        const side = Math.min(im.width, im.height);
+        ctx.drawImage(im, (im.width - side) / 2, (im.height - side) / 2, side, side, 0, 0, N, N);
+        URL.revokeObjectURL(url);
+        let out = cv.toDataURL('image/webp', 0.85);
+        if (!out.startsWith('data:image/webp')) out = cv.toDataURL('image/png');
+        document.getElementById('cat-image').value = out;
+        updateCatImagePreview();
+    };
+    im.onerror = () => { URL.revokeObjectURL(url); showToast('Could not read that image.'); };
+    im.src = url;
 }
 
 function closeCategoryModal() {
@@ -1471,7 +1538,7 @@ function saveCategoryForm(e) {
     const payload = {
         id: editId || `cat-${Date.now()}`,
         type,
-        emoji: document.getElementById('cat-emoji').value.trim() || '📦',
+        emoji: document.getElementById('cat-image').value || document.getElementById('cat-emoji').value.trim() || '📦',
         name: document.getElementById('cat-name').value.trim(),
         cap: type === 'Expense' ? Math.max(0, Number(document.getElementById('cat-cap').value) || 0) : 0,
         isPassive: type === 'Income' ? document.getElementById('cat-is-passive').checked : false,
@@ -1762,7 +1829,7 @@ function shareMonthlyReport() {
     const pct = Math.round((st.outcome / cap) * 100);
     const top = Object.entries(st.byCategory).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([id, amt], i) => {
         const c = getCategoryById(p, id);
-        return `${i + 1}. ${c.emoji || ''} ${escHtml(c.name)}: ${formatMoney(amt, 0)}`;
+        return `${i + 1}. ${catIconText(c)} ${escHtml(c.name)}: ${formatMoney(amt, 0)}`;
     });
     const lines = [
         `📊 *MyFinance Report* — ${m.label} ${m.year}`,
@@ -2020,7 +2087,7 @@ function renderNoteSuggestions() {
     box.innerHTML = list.map((e, i) => {
         const cat = getCategoryById(profile, e.categoryId);
         return `<button type="button" class="note-sug-item" data-i="${i}">
-            <span class="note-sug-emoji">${escHtml(cat.emoji || '📦')}</span>
+            <span class="note-sug-emoji">${catIcon(cat)}</span>
             <span class="note-sug-text"><b>${escHtml(e.note)}</b><small>${escHtml(cat.name)}</small></span>
             <span class="note-sug-amt">${escHtml(formatMoney(e.amount, 0))}</span>
         </button>`;
@@ -2141,8 +2208,16 @@ document.addEventListener('keydown', ev => {
 // Boot App — runs as soon as the page is parsed (does not wait for fonts/images)
 (function bootApp() {
     renderAll();
+    hideSplash();
     renderReminderSettings(); checkReminders();
     const u = document.getElementById('sync-url-input');
     if (u) u.value = getSyncUrl();
     setTimeout(() => syncNow(false), 1200);   // pull from the Sheet after the screen is already visible
 })();
+
+function hideSplash() {
+    const el = document.getElementById('splash');
+    if (!el) return;
+    const wait = Math.max(0, 1400 - (Date.now() - (window.__t0 || Date.now())));
+    setTimeout(() => { el.classList.add('done'); setTimeout(() => el.remove(), 450); }, wait);
+}
